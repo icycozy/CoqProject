@@ -35,6 +35,11 @@ PL_FILE_NAMES = \
 	
 PL_FILES=$(PL_FILE_NAMES:%.v=$(PL_DIR)/%.v)
 
+HEAP_FILE_NAMES = \
+	Heap.v
+
+HEAP_FILES=$(HEAP_FILE_NAMES:%.v=$(HEAP_DIR)/%.v)
+
 FILES = $(PL_FILES) \
   $(SETS_FILES) \
   $(COMPCERT_FILES) \

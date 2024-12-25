@@ -402,8 +402,6 @@ End StateRelMonad.
 |}.
 
 Module StateRelMonadOp.
-Import SetMonadOperator1.
-
 
 (** 下面用StateRelMonad表示带有程序状态的非确定性计算。*)
 
@@ -439,6 +437,13 @@ Definition choice {Σ A: Type} (f g: StateRelMonad.M Σ A): StateRelMonad.M Σ A
 Definition any {Σ: Type} (A: Type): StateRelMonad.M Σ A :=
   fun s1 _ s2 => s1 = s2.
 
+Inductive ContinueOrBreak (A B: Type): Type :=
+| by_continue (a: A)
+| by_break (b: B).
+
+Arguments by_continue {_} {_} (_).
+Arguments by_break {_} {_} (_).
+
 Definition repeat_break_f
              {Σ A B: Type}
              (body: A -> StateRelMonad.M Σ (ContinueOrBreak A B))
@@ -456,6 +461,9 @@ Definition repeat_break
   A -> StateRelMonad.M Σ B :=
   Kleene_LFix (repeat_break_f body).
 
+Definition delete: StateRelMonad.M Z Z :=
+  ret 1.
+
 Definition continue {Σ A B: Type} (a: A):
   StateRelMonad.M Σ (ContinueOrBreak A B) :=
   ret (by_continue a).
@@ -468,7 +476,7 @@ End StateRelMonadOp.
 
 (** 可以如下定义有向图。*)
 
-Record PreGraph (Vertex Edge: Type) := {
+(* Record PreGraph (Vertex Edge: Type) := {
   vvalid : Vertex -> Prop;
   evalid : Edge -> Prop;
   src : Edge -> Vertex;
@@ -574,7 +582,7 @@ Definition DFS {V E} (pg: PreGraph V E) (u: V):
   StateRelMonad.M (state V) unit :=
   repeat_break (body_DFS pg) u.
 
-End StateRelMonadExample.
+End StateRelMonadExample. *)
 
 Module StateRelMonadHoare.
 Import SetMonadOperator1
