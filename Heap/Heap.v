@@ -98,19 +98,19 @@ Record Heap (h: BinTree Z Z): Prop :=
 
 (* 第一种局部破坏：当前节点v与父节点fa的大小关系不满足。可能出现在插入过程中。 *)
 
-Record Heap_broken_up (h: BinTree Z Z) (v fa: Z): Prop :=
+Record Heap_broken_up (h: BinTree Z Z) (v: Z): Prop :=
 {
-  up_fa2v: BinaryTree.step_u h v fa /\ v < fa;
+  up_fa2v: exists fa: Z, BinaryTree.step_u h v fa /\ v < fa;
   up_others_l: forall x y: Z, BinaryTree.step_l h x y -> ~ (y = v) -> x < y;
   up_others_r: forall x y: Z, BinaryTree.step_r h x y -> ~ (y = v) -> x < y;
 }.  
 
 (* 第二种局部破坏：当前节点v与左右子节点lc, rc的大小关系不满足。可能出现在删除过程中。 *)
 
-Record Heap_broken_down (h: BinTree Z Z) (v lc rc: Z): Prop :=
+Record Heap_broken_down (h: BinTree Z Z) (v: Z): Prop :=
 {
-  down_v2lc_or_v2rc: (BinaryTree.step_l h v lc /\ v < lc) \/
-                (BinaryTree.step_r h v rc /\ v < rc);
+  down_v2lc_or_v2rc: (exists lc: Z, BinaryTree.step_l h v lc /\ v > lc) \/
+                     (exists rc: Z, BinaryTree.step_r h v rc /\ v > rc);
   down_others_l: forall x y: Z, BinaryTree.step_l h x y -> ~ (x = v) -> x < y;
   down_others_r: forall x y: Z, BinaryTree.step_r h x y -> ~ (x = v) -> x < y;
 }.
@@ -265,6 +265,21 @@ Definition body_move_up (v: Z):
 
 Definition move_up (v: Z): StateRelMonad.M state unit :=
   repeat_break body_move_up v.
+  
+(* 上移节点操作正确性：
+1. 集合不变
+2. 保持二叉树合法性
+3. 从堆或局部破坏的堆开始，最终恢复堆性质 *)
+
+Theorem move_up_correctness: forall (v: Z) (V: Z -> Prop),
+  Hoare (fun s => Abs s.(heap) V /\
+                  BinaryTree.legal s.(heap) /\
+                  (Heap_broken_up s.(heap) v \/ Heap s.(heap)))
+        (move_up v)
+        (fun _ s => Abs s.(heap) V /\
+                    BinaryTree.legal s.(heap) /\
+                    Heap s.(heap)).
+Admitted.
 
 Definition insert (val: Z): StateRelMonad.M state unit :=
   choice
@@ -278,6 +293,23 @@ Definition insert (val: Z): StateRelMonad.M state unit :=
         move_up val))
     (test_empty;;
       heap_single val).
+
+(* 插入操作正确性：
+1. val不在堆中，插入后在堆中
+2. 保持二叉树合法性
+3. 保持堆性质 *)
+
+Theorem insert_correctness: forall (val: Z) (V: Z -> Prop),
+  Hoare (fun s => Abs s.(heap) V /\
+                  ~ s.(heap).(vvalid) val /\ 
+                  BinaryTree.legal s.(heap) /\
+                  Heap s.(heap))
+        (insert val)
+        (fun _ s => Abs s.(heap) (V ∪ Sets.singleton val) /\ 
+                    BinaryTree.legal s.(heap) /\
+                    Heap s.(heap)).
+Admitted.
+
 
 Definition body_move_down (v: Z):
   StateRelMonad.M state (ContinueOrBreak Z unit) :=
@@ -322,6 +354,21 @@ Definition body_move_down (v: Z):
 Definition move_down (v: Z): StateRelMonad.M state unit :=
   repeat_break body_move_down v.
 
+(* 下移节点操作正确性：
+1. 集合不变
+2. 保持二叉树合法性
+3. 从堆或局部破坏的堆开始，最终恢复堆性质 *)
+
+Theorem move_down_correctness: forall (v: Z) (V: Z -> Prop),
+  Hoare (fun s => Abs s.(heap) V /\
+                  BinaryTree.legal s.(heap) /\
+                  (Heap_broken_down s.(heap) v \/ Heap s.(heap)))
+        (move_down v)
+        (fun _ s => Abs s.(heap) V /\
+                    BinaryTree.legal s.(heap) /\
+                    Heap s.(heap)).
+Admitted.
+
 Definition delete: StateRelMonad.M state Z :=
   rt <- get_root;;
   v <- any_valid_v;;
@@ -337,20 +384,13 @@ Definition delete: StateRelMonad.M state Z :=
       move_down v;;
       ret rt).
 
-Theorem insert_correctness:forall (v: Z) (V: Z -> Prop),
-  Hoare (fun s => Abs s.(heap) V /\
-                  ~ s.(heap).(vvalid) v /\ 
-                  BinaryTree.legal s.(heap) /\
-                  Heap s.(heap))
-        (insert v)
-        (fun _ s => Abs s.(heap) (V ∪ Sets.singleton v) /\ 
-                    BinaryTree.legal s.(heap) /\
-                    Heap s.(heap)).
-Admitted.
-
 Definition is_minimum (val: Z) (V: Z -> Prop): Prop :=
   forall x, V x -> x >= val.
 
+(* 删除操作正确性（保证非空的前提下）：
+1. 删除的元素是最小值
+2. 保持二叉树合法性
+3. 保持堆性质 *)
 
 Theorem delete_correctness: forall (V: Z -> Prop),
   Hoare (fun s => Abs s.(heap) V /\
