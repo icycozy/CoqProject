@@ -401,30 +401,13 @@ End StateRelMonad.
   ret := StateRelMonad.ret Σ;
 |}.
 
+Module AA.
+
+Definition aa: Z := 1.
+
+End AA.
+
 Module StateRelMonadOp.
-
-(** 下面用StateRelMonad表示带有程序状态的非确定性计算。*)
-
-Module StateRelMonad.
-
-Definition M (Σ A: Type): Type :=
-  Σ -> A -> Σ -> Prop.
-
-Definition bind (Σ A B: Type) (f: M Σ A) (g: A -> M Σ B): M Σ B :=
-  fun (s1: Σ) (b: B) (s3: Σ) =>
-    exists (a: A) (s2: Σ),
-      (s1, a, s2) ∈ f /\ (s2, b, s3) ∈ g a.
-
-Definition ret (Σ A: Type) (a0: A): M Σ A :=
-  fun (s1: Σ) (a: A) (s2: Σ) => a = a0 /\ s1 = s2.
-
-End StateRelMonad.
-
-#[export] Instance state_rel_monad (Σ: Type): Monad (StateRelMonad.M Σ) :=
-{|
-  bind := StateRelMonad.bind Σ;
-  ret := StateRelMonad.ret Σ;
-|}.
 
 (** 以下可以再定义一些额外的算子。*)
 
@@ -433,6 +416,12 @@ Definition test {Σ: Type} (P: Σ -> Prop): StateRelMonad.M Σ unit :=
 
 Definition choice {Σ A: Type} (f g: StateRelMonad.M Σ A): StateRelMonad.M Σ A :=
   f ∪ g.
+
+Definition choice3 {Σ A: Type} (f1 f2 f3: StateRelMonad.M Σ A): StateRelMonad.M Σ A :=
+  f1 ∪ f2 ∪ f3.
+
+Definition choice4 {Σ A: Type} (f1 f2 f3 f4: StateRelMonad.M Σ A): StateRelMonad.M Σ A :=
+  f1 ∪ f2 ∪ f3 ∪ f4.
 
 Definition any {Σ: Type} (A: Type): StateRelMonad.M Σ A :=
   fun s1 _ s2 => s1 = s2.
@@ -460,9 +449,6 @@ Definition repeat_break
              (body: A -> StateRelMonad.M Σ (ContinueOrBreak A B)):
   A -> StateRelMonad.M Σ B :=
   Kleene_LFix (repeat_break_f body).
-
-Definition delete: StateRelMonad.M Z Z :=
-  ret 1.
 
 Definition continue {Σ A B: Type} (a: A):
   StateRelMonad.M Σ (ContinueOrBreak A B) :=
