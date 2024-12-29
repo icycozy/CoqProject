@@ -388,10 +388,15 @@ Theorem move_up_correctness1: forall (v: Z) (V: Z -> Prop),
                     BinaryTree.legal s.(heap) /\
                     Heap s.(heap)).
 Proof.
-  intros v V.
-  unfold Hoare, Abs.
-  intros s1 ? s2 [Hvalid [Habs [Hlegal [Hbroken | Hheap]]]] Hmove.
-  - split; [| split].
+   intros.
+   unfold Hoare. split.
+   + unfold Abs. destruct H as [h1 h2].
+     destruct h2 as [h3 h4].
+     unfold Abs in h3.
+     rewrite h3. unfold move_up in H0.
+     apply (StateRelMonadHoare.Hoare_repeat_break _ 
+     (fun '(s1,a,s2) => (s1.(heap)).(vvalid) ==
+     (s2.(heap)).(vvalid))) in H0.
 Admitted.
 
 Locate Hoare_repeat_break.
@@ -407,9 +412,9 @@ Proof.
   unfold Hoare.
   intros s1 ? s2 [Hvalid [Hlegal Hcomplete]].
   generalize dependent s2.
-  apply (StateRelMonadHoare.Hoare_repeat_break _ (fun s => s.(heap).(vvalid) v /\
+  (* apply (StateRelMonadHoare.Hoare_repeat_break _ (fun s => s.(heap).(vvalid) v /\
                                                       BinaryTree.legal s.(heap) /\
-                                                      is_complete_or_full_bintree s.(heap))).
+                                                      is_complete_or_full_bintree s.(heap))). *)
 Admitted.
 
 Definition body_insert_node (val: Z) (v: Z):
