@@ -570,6 +570,7 @@ Definition DFS {V E} (pg: PreGraph V E) (u: V):
 
 End StateRelMonadExample. *)
 
+
 Module StateRelMonadHoare.
 Import SetMonadOperator1
        StateRelMonadOp.
@@ -611,6 +612,158 @@ Proof.
   destruct H0; subst; tauto.
 Qed.
 
-End StateRelMonadHoare.
+Theorem Hoare_choice {Σ A: Type}:
+  forall P (f g: StateRelMonad.M Σ A) Q,
+    Hoare P f Q -> 
+    Hoare P g Q ->
+    Hoare P (choice f g) Q.
+Proof.
+  intros.
+  unfold Hoare, choice; sets_unfold.
+  intros ? ? ? ? [? | ?].
+  + pose proof H _ _ _ H1 H2.
+    tauto.
+  + pose proof H0 _ _ _ H1 H2.
+    tauto.
+Qed.
 
+Theorem Hoare_test_bind {Σ A: Type}:
+  forall P (Q: Σ -> Prop) (f: StateRelMonad.M Σ A) R,
+    Hoare (fun s => Q s /\ P s) f R -> 
+    Hoare P (test Q;; f) R.
+Proof.
+  intros.
+  eapply Hoare_bind; [| intros; apply H].
+  unfold Hoare, test; sets_unfold.
+  intros s1 _ s2 ? [? ?].
+  subst; tauto.
+Qed.
+
+Theorem Hoare_any {Σ A: Type}:
+  forall (P: Σ -> Prop),
+    Hoare P (any A) (fun _ => P).
+Proof.
+  unfold Hoare, any; sets_unfold.
+  intros.
+  subst; tauto.
+Qed.
+
+Theorem Hoare_conseq {Σ A: Type}:
+  forall (P1 P2: Σ -> Prop) f (Q1 Q2: A -> Σ -> Prop),
+    (forall s, P1 s -> P2 s) ->
+    (forall b s, Q2 b s -> Q1 b s) ->
+    Hoare P2 f Q2 ->
+    Hoare P1 f Q1.
+Proof.
+  intros.
+  unfold Hoare.
+  intros.
+  apply H0.
+  apply (H1 s1 a s2).
+  + apply H; tauto.
+  + tauto.
+Qed.
+
+Theorem Hoare_conseq_pre {Σ A: Type}:
+  forall (P1 P2: Σ -> Prop) f (Q: A -> Σ -> Prop),
+    (forall s, P1 s -> P2 s) ->
+    Hoare P2 f Q ->
+    Hoare P1 f Q.
+Proof.
+  intros.
+  unfold Hoare.
+  intros.
+  apply (H0 s1 a s2).
+  + apply H; tauto.
+  + tauto.
+Qed.
+
+Theorem Hoare_conseq_post {Σ A: Type}:
+  forall (P: Σ -> Prop) f (Q1 Q2: A -> Σ -> Prop),
+    (forall b s, Q2 b s -> Q1 b s) ->
+    Hoare P f Q2 ->
+    Hoare P f Q1.
+Proof.
+  intros.
+  unfold Hoare.
+  intros.
+  apply H.
+  apply (H0 s1 a s2); tauto.
+Qed.
+
+Theorem Hoare_conj {Σ A: Type}:
+  forall (P: Σ -> Prop) f (Q1 Q2: A -> Σ -> Prop),
+    Hoare P f Q1 ->
+    Hoare P f Q2 ->
+    Hoare P f (fun a s => Q1 a s /\ Q2 a s).
+Proof.
+  intros.
+  unfold Hoare; intros.
+  split.
+  + apply (H _ _ _ H1 H2).
+  + apply (H0 _ _ _ H1 H2).
+Qed.  
+
+Theorem Hoare_forall {Σ A: Type}:
+  forall (X: Type) (P: Σ -> Prop) f (Q: X -> A -> Σ -> Prop),
+    (forall x, Hoare P f (Q x)) ->
+    Hoare P f (fun a s => forall x, Q x a s).
+Proof.
+  intros.
+  unfold Hoare.
+  intros.
+  apply (H x _ _ _ H0 H1).
+Qed.
+
+Theorem Hoare_pre_ex {Σ A: Type}:
+  forall (X: Type) (P: X -> Σ -> Prop) f (Q: A -> Σ -> Prop),
+    (forall x, Hoare (P x) f Q) ->
+    Hoare (fun s => exists x, P x s) f Q.
+Proof.
+  intros.
+  unfold Hoare.
+  intros s1 a s2 [x ?] ?.
+  apply (H x _ _ _ H0 H1).
+Qed.
+
+Theorem Hoare_ret' {Σ A: Type}:
+  forall (P: Σ -> Prop) (Q: A -> Σ -> Prop) (a0: A),
+    (forall s, P s -> Q a0 s) ->
+    Hoare P (ret a0) Q.
+Proof.
+  intros.
+  unfold Hoare, ret; simpl; sets_unfold; unfold StateRelMonad.ret.
+  intros.
+  destruct H1; subst.
+  apply H. tauto.
+Qed.
+
+Theorem Hoare_repeat_break {Σ A B: Type}:
+  forall (body: A -> StateRelMonad.M Σ (ContinueOrBreak A B))
+         (P: A -> Σ -> Prop)
+         (Q: B -> Σ -> Prop),
+    (forall a, Hoare (P a) (body a) (fun x s => match x with
+                                                | by_continue a => P a s
+                                                | by_break b => Q b s
+                                                end)) ->
+    (forall a, Hoare (P a) (repeat_break body a) Q).
+Proof.
+  intros.
+  unfold Hoare; sets_unfold.
+  intros s1 b s2 ?.
+  unfold repeat_break, Kleene_LFix; unfold_CPO_defs.
+  intros [n ?].
+  revert a s1 b s2 H0 H1.
+  change (forall a, Hoare (P a) (Nat.iter n (repeat_break_f body) ∅ a) Q).
+  induction n; intros; simpl.
+  + unfold Hoare; sets_unfold; intros; tauto.
+  + unfold repeat_break_f at 1.
+    eapply Hoare_bind.
+    - apply H.
+    - intros [a0 | b0].
+      * apply IHn.
+      * apply Hoare_ret.
+Qed.
+
+End StateRelMonadHoare.
 
