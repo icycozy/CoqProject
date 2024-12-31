@@ -401,12 +401,6 @@ End StateRelMonad.
   ret := StateRelMonad.ret Σ;
 |}.
 
-Module AA.
-
-Definition aa: Z := 1.
-
-End AA.
-
 Module StateRelMonadOp.
 
 (** 以下可以再定义一些额外的算子。*)
@@ -462,7 +456,7 @@ End StateRelMonadOp.
 
 (** 可以如下定义有向图。*)
 
-(* Record PreGraph (Vertex Edge: Type) := {
+Record PreGraph (Vertex Edge: Type) := {
   vvalid : Vertex -> Prop;
   evalid : Edge -> Prop;
   src : Edge -> Vertex;
@@ -568,7 +562,7 @@ Definition DFS {V E} (pg: PreGraph V E) (u: V):
   StateRelMonad.M (state V) unit :=
   repeat_break (body_DFS pg) u.
 
-End StateRelMonadExample. *)
+End StateRelMonadExample.
 
 
 Module StateRelMonadHoare.
@@ -767,3 +761,141 @@ Qed.
 
 End StateRelMonadHoare.
 
+Module DFSProof.
+Import StateRelMonadExample
+       SetMonadOperator1
+       StateRelMonadOp
+       StateRelMonadHoare.
+
+
+Fact push_stack_fact {V: Type}: forall (v: V) P,
+  Hoare P (push_stack v) (fun _ s => exists s', s.(stack) = v :: s'.(stack) /\ s.(visited) = s'.(visited) /\ P s').
+Proof.
+  intros.
+  unfold Hoare, push_stack; sets_unfold.
+  intros s1 _ s2 ? [? ?].
+  exists s1; tauto.
+Qed.
+
+Fact pop_stack_fact {V: Type}: forall P,
+  Hoare P (pop_stack) (fun (v: V) s => exists s', s'.(stack) = v :: s.(stack) /\ s.(visited) = s'.(visited) /\ P s').
+Proof.
+  intros.
+  unfold Hoare, pop_stack; sets_unfold.
+  intros s1 v s2 ? [? ?].
+  exists s1; tauto.
+Qed.
+
+Fact visit_fact {V: Type}: forall (v: V) P,
+  Hoare P (visit v) (fun _ s => exists s', s.(stack) = s'.(stack) /\ s.(visited) == s'.(visited) ∪ Sets.singleton v /\ P s').
+Proof.
+  intros.
+  unfold Hoare, visit; sets_unfold.
+  intros s1 _ s2 ? [? ?].
+  exists s1; tauto.
+Qed.
+
+Definition I1 {V E} (pg: PreGraph V E) (u: V): V -> Prop :=
+  fun v => reachable pg u v.
+
+Definition I2 {V E} (pg: PreGraph V E) (u: V): state V -> Prop :=
+  fun s => forall v, In v s.(stack) -> reachable pg u v.
+
+Lemma DFS_stack_reachable {V E} (pg: PreGraph V E):
+  forall (u v: V),
+    Hoare (fun s => I1 pg u v /\ I2 pg u s)
+          (body_DFS pg v)
+          (fun res s =>
+             match res with
+             | by_continue w => I1 pg u w /\ I2 pg u s
+             | by_break _ => True
+             end).
+Proof.
+  intros.
+  unfold body_DFS, I1, I2.
+  apply Hoare_choice.
+  + eapply Hoare_bind; [apply Hoare_any |].
+    intros w.
+    apply Hoare_test_bind.
+    apply Hoare_test_bind.
+    eapply Hoare_bind; [apply push_stack_fact | cbv beta; intros _].
+    apply Hoare_pre_ex; intros s'.
+    eapply Hoare_bind; [apply visit_fact | cbv beta; intros _].
+    apply Hoare_pre_ex; intros s''.
+    apply Hoare_ret'; intros.
+    destruct H as [? [? [? [? [? [? [? ?]]]]]]].
+    split.
+    - transitivity_n1 v; tauto.
+    - intros.
+      rewrite H, H1 in H7.
+      simpl in H7; destruct H7.
+      * subst v0.
+        tauto.
+      * revert H7; apply H6.
+  + apply Hoare_test_bind.
+    apply Hoare_choice.
+    - eapply Hoare_bind; [apply pop_stack_fact | intros w].
+      apply Hoare_pre_ex; intros s'.
+      apply Hoare_ret'.
+      intros.
+      destruct H as [? [? [? [? ?]]]].
+      rewrite H in H3.
+      simpl in H3.
+      split.
+      * apply (H3 w); tauto.
+      * intros.
+        apply H3; tauto.
+    - apply Hoare_test_bind.
+      apply Hoare_ret'.
+      tauto.
+Qed.
+
+Definition I3 {V E} (pg: PreGraph V E) (u: V): state V -> Prop :=
+  fun s => forall v, v ∈ s.(visited) -> reachable pg u v.
+
+Lemma DFS_visited_reachable {V E} (pg: PreGraph V E):
+  forall (u v: V),
+    Hoare (fun s => I1 pg u v /\ I3 pg u s)
+          (body_DFS pg v)
+          (fun res s =>
+             match res with
+             | by_continue _ => I3 pg u s
+             | by_break _ => I3 pg u s
+             end).
+Proof.
+  intros.
+  unfold body_DFS, I1, I3.
+  apply Hoare_choice.
+  + eapply Hoare_bind; [apply Hoare_any |].
+    intros w.
+    apply Hoare_test_bind.
+    apply Hoare_test_bind.
+    eapply Hoare_bind; [apply push_stack_fact | cbv beta; intros _].
+    apply Hoare_pre_ex; intros s'.
+    eapply Hoare_bind; [apply visit_fact | cbv beta; intros _].
+    apply Hoare_pre_ex; intros s''.
+    apply Hoare_ret'; intros.
+    destruct H as [? [? [? [? [? [? [? ?]]]]]]].
+    rewrite H1, H3 in H0.
+    Sets_unfold1 in H0.
+    destruct H0.
+    - revert H0; apply H7.
+    - sets_unfold in H0.
+      subst v0.
+      transitivity_n1 v; tauto.
+  + apply Hoare_test_bind.
+    apply Hoare_choice.
+    - eapply Hoare_bind; [apply pop_stack_fact | intros w].
+      apply Hoare_pre_ex; intros s'.
+      apply Hoare_ret'.
+      intros.
+      destruct H as [? [? [? [? ?]]]].
+      rewrite H1 in H0.
+      revert H0; apply H4.
+    - apply Hoare_test_bind.
+      apply Hoare_ret'.
+      tauto.
+Qed.
+
+
+End DFSProof.

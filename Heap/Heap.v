@@ -378,28 +378,108 @@ Definition move_up (v: Z): StateRelMonad.M state unit :=
 3. 从堆或局部破坏的堆开始，变为堆
 4. 保持满二叉树 *)
 
+Fact get_fa_fact: forall (v: Z) P, 
+  Hoare P (get_fa v) (fun fa s => P s /\ BinaryTree.step_u s.(heap) v fa).
+Proof.
+  intros.
+  unfold Hoare, get_fa; sets_unfold.
+  intros. destruct H0.
+  split.
+  - rewrite H1. tauto.
+  - rewrite H1. tauto.
+Qed.
+
+(* 有些条件多余 *)
+
+Fact swap_v_fa_fact1: forall (v fa: Z) (V: Z -> Prop), 
+  Hoare
+    (fun s => v < fa /\
+              ((s.(heap)).(vvalid) v /\
+                Abs s.(heap) V /\
+                BinaryTree.legal s.(heap) /\
+                (Heap s.(heap) \/ Heap_broken_up s.(heap) v)) /\
+              BinaryTree.step_u s.(heap) v fa)
+    (swap_v_u v fa)
+    (fun _ s => (s.(heap)).(vvalid) v /\
+                Abs s.(heap) V /\
+                BinaryTree.legal s.(heap) /\
+                (Heap s.(heap) \/ Heap_broken_up s.(heap) v)).
+Admitted.
+
+
+Lemma L1: forall (x y: Z),
+  x < y -> x > y -> False.
+Admitted.
+
 Theorem move_up_correctness1: forall (v: Z) (V: Z -> Prop),
   Hoare (fun s => s.(heap).(vvalid) v /\
                   Abs s.(heap) V /\
                   BinaryTree.legal s.(heap) /\
-                  (Heap_broken_up s.(heap) v \/ Heap s.(heap)))
+                  (Heap s.(heap) \/ Heap_broken_up s.(heap) v))
         (move_up v)
         (fun _ s => Abs s.(heap) V /\
                     BinaryTree.legal s.(heap) /\
                     Heap s.(heap)).
 Proof.
-   intros.
-   unfold Hoare. split.
-   + unfold Abs. destruct H as [h1 h2].
-     destruct h2 as [h3 h4].
-     unfold Abs in h3.
-     rewrite h3. unfold move_up in H0.
-     apply (StateRelMonadHoare.Hoare_repeat_break _ 
-     (fun '(s1,a,s2) => (s1.(heap)).(vvalid) ==
-     (s2.(heap)).(vvalid))) in H0.
-Admitted.
+  intros. revert v.
+  unfold move_up.
+  apply Hoare_repeat_break.
+  intros v.
+  unfold body_move_up.
+  apply Hoare_choice.
+  - apply Hoare_test_bind.
+    apply Hoare_ret'.
+    intros.
+    destruct H as [[? ?] [? [? [? ?]]]].
+    split; [apply H2|].
+    split; [apply H3|].
+    destruct H4; [apply H4|].
+    destruct H4.
+    destruct up_fa_v_lc_rc0 as [fa ?].
+    assert (exists fa : Z, BinaryTree.step_u s.(heap) v fa).
+    { exists fa; apply H4. }
+    tauto. 
+  - eapply Hoare_bind; [apply get_fa_fact| cbv beta].
+    intros fa.
+    apply Hoare_choice.
+    + apply Hoare_test_bind.
+      apply Hoare_ret'.
+      intros.
+      destruct H as [? [[? [? [? ?]]] ?]].
+      split; [apply H1|].
+      split; [apply H2|].
+      destruct H3; [apply H3|].
+      destruct H3.
+      destruct up_fa_v_lc_rc0 as [fa' [? [? _]]].
+      assert (fa = fa').
+      { pose proof (BinaryTree.step_u_unique s.(heap) H2 v fa fa' H4 H3). tauto. }
+      subst fa'.
+      pose proof (L1 v fa H5 H). tauto.
+    + apply Hoare_test_bind.
+      eapply Hoare_bind; [apply (swap_v_fa_fact1 v fa V)| cbv beta; intros _].
+      apply Hoare_ret'.
+      intros.
+      destruct H as [? [? [? ?]]].
+      split; [apply H|].
+      split; [apply H0|].
+      split; [apply H1|].
+      apply H2.
+Qed.
 
-Locate Hoare_repeat_break.
+(* 有些条件多余 *)
+
+Fact swap_v_fa_fact2: forall (v fa: Z), 
+  Hoare
+    (fun s => v < fa /\
+              ((s.(heap)).(vvalid) v /\
+                BinaryTree.legal s.(heap) /\
+                is_complete_or_full_bintree s.(heap)) /\
+              BinaryTree.step_u s.(heap) v fa)
+    (swap_v_u v fa)
+    (fun _ s => (s.(heap)).(vvalid) v /\
+                BinaryTree.legal s.(heap) /\
+                is_complete_or_full_bintree s.(heap)).
+Admitted.
 
 Theorem move_up_correctness2: forall (v: Z),
   Hoare (fun s => s.(heap).(vvalid) v /\
@@ -408,14 +488,30 @@ Theorem move_up_correctness2: forall (v: Z),
         (move_up v)
         (fun _ s => is_complete_or_full_bintree s.(heap)).
 Proof.
+  intros. revert v.
+  unfold move_up.
+  apply Hoare_repeat_break.
   intros v.
-  unfold Hoare.
-  intros s1 ? s2 [Hvalid [Hlegal Hcomplete]].
-  generalize dependent s2.
-  (* apply (StateRelMonadHoare.Hoare_repeat_break _ (fun s => s.(heap).(vvalid) v /\
-                                                      BinaryTree.legal s.(heap) /\
-                                                      is_complete_or_full_bintree s.(heap))). *)
-Admitted.
+  unfold body_move_up.
+  apply Hoare_choice.
+  - apply Hoare_test_bind.
+    apply Hoare_ret'.
+    intros.
+    tauto.
+  - eapply Hoare_bind; [apply get_fa_fact| cbv beta].
+    intros fa.
+    apply Hoare_choice.
+    + apply Hoare_test_bind.
+      apply Hoare_ret'.
+      intros.
+      tauto.
+    + apply Hoare_test_bind.
+      eapply Hoare_bind; [apply (swap_v_fa_fact2 v fa)| cbv beta; intros _].
+      apply Hoare_ret'.
+      intros.
+      apply H.
+Qed.
+
 
 Definition body_insert_node (val: Z) (v: Z):
   StateRelMonad.M state (ContinueOrBreak Z unit) :=
