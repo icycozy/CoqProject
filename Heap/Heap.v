@@ -513,6 +513,20 @@ Proof.
 Qed.
 
 
+Theorem move_up_correctness_full: forall (v: Z) (V: Z -> Prop),
+  Hoare (fun s => s.(heap).(vvalid) v /\
+                  Abs s.(heap) V /\
+                  BinaryTree.legal s.(heap) /\
+                  (Heap s.(heap) \/ Heap_broken_up s.(heap) v) /\ 
+                  is_complete_or_full_bintree s.(heap))
+          (move_up v)
+          (fun _ s => Abs s.(heap) V /\
+                      BinaryTree.legal s.(heap) /\
+                      Heap s.(heap) /\ 
+                      is_complete_or_full_bintree s.(heap)).
+Admitted.
+
+
 Definition body_insert_node (val: Z) (v: Z):
   StateRelMonad.M state (ContinueOrBreak Z unit) :=
     choice3
@@ -548,18 +562,153 @@ Definition insert_node (val: Z): StateRelMonad.M state unit :=
 3. 从堆开始，变为局部破坏的堆或堆
 4. 保持满二叉树 *)
 
+Fact get_minimum_correctness: forall P, 
+  Hoare P get_minimum (fun rt s => P s /\ s.(heap).(vvalid) rt).
+Proof.
+  intros.
+  unfold Hoare, get_minimum; sets_unfold.
+  intros. destruct H0.
+  split.
+  - apply H1 in H0.
+    destruct H0.
+    rewrite H2. tauto.
+  - assert (HH: s2 = s1).
+    { apply H1 in H0. tauto. }
+    subst s2. tauto.
+Qed.
+
+Fact insert_lc_rt_fact: forall (rt val: Z) (V: Z -> Prop), 
+  Hoare
+    (fun s : state =>
+                      ((s.(heap)).(vvalid) rt /\
+                      ~ (exists lc : Z, BinaryTree.step_l s.(heap) rt lc)) /\
+                      ((exists x : Z, (s.(heap)).(vvalid) x) /\
+                      Abs s.(heap) V /\
+                      ~ (s.(heap)).(vvalid) val /\
+                      BinaryTree.legal s.(heap) /\
+                      Heap s.(heap) /\
+                      is_complete_or_full_bintree s.(heap)) /\
+                      (s.(heap)).(vvalid) rt)
+    (insert_lc rt val)
+    (fun _ s => (s.(heap)).(vvalid) == V ∪ Sets.singleton val /\
+                BinaryTree.legal s.(heap) /\
+                (Heap_broken_up s.(heap) val \/ Heap s.(heap)) /\ 
+                is_complete_or_full_bintree s.(heap)).
+Admitted.
+
+Fact insert_rc_rt_fact: forall (rt val: Z) (V: Z -> Prop), 
+  Hoare
+  (fun s : state =>
+                    ((s.(heap)).(vvalid) rt /\
+                    ~ (exists rc : Z, BinaryTree.step_r s.(heap) rt rc)) /\
+                    (exists lc : Z, BinaryTree.step_l s.(heap) rt lc) /\
+                    ((exists x : Z, (s.(heap)).(vvalid) x) /\
+                    Abs s.(heap) V /\
+                    ~ (s.(heap)).(vvalid) val /\
+                    BinaryTree.legal s.(heap) /\
+                    Heap s.(heap) /\ is_complete_or_full_bintree s.(heap)) /\
+                    (s.(heap)).(vvalid) rt)
+    (insert_rc rt val)
+    (fun _ s => (s.(heap)).(vvalid) == V ∪ Sets.singleton val /\
+                BinaryTree.legal s.(heap) /\
+                (Heap_broken_up s.(heap) val \/ Heap s.(heap)) /\ 
+                is_complete_or_full_bintree s.(heap)).
+Admitted.
+
+Fact get_lc_fact: forall (rt: Z) P, 
+  Hoare P (get_lc rt) (fun lc s => P s /\ BinaryTree.step_l s.(heap) rt lc).
+Admitted.
+
+Fact get_rc_fact: forall (rt: Z) P, 
+  Hoare P (get_rc rt) (fun rc s => P s /\ BinaryTree.step_r s.(heap) rt rc).
+Admitted.
+
+(* 条件+非空  结论+vvalid val *)
 Theorem insert_node_correctness: forall (val: Z) (V: Z -> Prop),
-  Hoare (fun s => Abs s.(heap) V /\
+  Hoare (fun s => (exists x : Z, (s.(heap)).(vvalid) x) /\
+                  Abs s.(heap) V /\
                   ~ s.(heap).(vvalid) val /\ 
                   BinaryTree.legal s.(heap) /\
                   Heap s.(heap) /\
                   is_complete_or_full_bintree s.(heap))
         (insert_node val)
-        (fun _ s => Abs s.(heap) (V ∪ Sets.singleton val) /\
+        (fun _ s =>
+                    Abs s.(heap) (V ∪ Sets.singleton val) /\
                     BinaryTree.legal s.(heap) /\
                     (Heap_broken_up s.(heap) val \/ Heap s.(heap)) /\
                     is_complete_or_full_bintree s.(heap)).
-Admitted.
+Proof.
+  intros.
+  unfold insert_node.
+  eapply Hoare_bind; [apply get_minimum_correctness| cbv beta].
+  apply Hoare_repeat_break.
+  intros rt.
+  unfold body_insert_node.
+  apply Hoare_choice3.
+  - apply Hoare_test_bind.
+    eapply Hoare_bind; [apply insert_lc_rt_fact| cbv beta].
+    intros.
+    apply Hoare_ret'.
+    intros.
+    destruct H as [? [? [? ?]]].
+    split.
+    + unfold Abs.
+      rewrite <- H.
+      reflexivity.
+    + split; [apply H0|].
+      split; [apply H1|].
+      apply H2.
+  - apply Hoare_test_bind.
+    apply Hoare_test_bind.
+    eapply Hoare_bind; [apply insert_rc_rt_fact| cbv beta].
+    intros.
+    apply Hoare_ret'.
+    intros.
+    destruct H as [? [? [? ?]]].
+    unfold Abs.
+    rewrite <- H.
+    split; [reflexivity|].
+    split; [apply H0|].
+    split; [apply H1|].
+    apply H2.
+  - eapply Hoare_bind; [apply get_lc_fact| cbv beta].
+    intros lc.
+    eapply Hoare_bind; [apply get_rc_fact| cbv beta].
+    intros rc.
+    apply Hoare_choice4.
+    + apply Hoare_test_bind.
+      apply Hoare_ret'.
+      intros.
+      destruct H as [? [[? ?] ?]].
+      destruct H0 as [[? [? [? [? ?]]]] ?].
+      unfold BinaryTree.step_l in H1.
+      destruct H1 as [e [[? ?] ?]].
+      tauto.
+    + apply Hoare_test_bind.
+      apply Hoare_ret'.
+      intros.
+      destruct H as [? [[? ?] ?]].
+      destruct H0 as [[? [? [? [? ?]]]] ?].
+      unfold BinaryTree.step_r in H2.
+      destruct H2 as [e [[? ?] ?]].
+      tauto.
+    + apply Hoare_test_bind.
+      apply Hoare_ret'.
+      intros.
+      destruct H as [? [[? ?] ?]].
+      destruct H0 as [[? [? [? [? ?]]]] ?].
+      unfold BinaryTree.step_l in H2.
+      destruct H2 as [e [[? ?] ?]].
+      tauto.
+    + apply Hoare_test_bind.
+      apply Hoare_ret'.
+      intros.
+      destruct H as [? [[? ?] ?]].
+      destruct H0 as [[? [? [? [? ?]]]] ?].
+      unfold BinaryTree.step_r in H1.
+      destruct H1 as [e [[? ?] ?]].
+      tauto.
+Qed.
 
 Definition insert (val: Z): StateRelMonad.M state unit :=
   choice
@@ -599,7 +748,15 @@ Theorem insert_correctness: forall (val: Z) (V: Z -> Prop),
                     BinaryTree.legal s.(heap) /\
                     Heap s.(heap) /\ 
                     is_complete_or_full_bintree s.(heap)).
-Admitted.
+Proof.
+  intros.
+  unfold insert.
+  apply Hoare_choice.
+  - apply Hoare_test_bind.
+    eapply Hoare_bind; [apply insert_node_correctness| cbv beta].
+    intros.
+    apply (move_up_correctness_full val (V ∪ Sets.singleton val)).
+
 
 
 (*********************************************************)

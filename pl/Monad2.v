@@ -621,6 +621,47 @@ Proof.
     tauto.
 Qed.
 
+Theorem Hoare_choice3 {Σ A: Type}:
+  forall P (f g h: StateRelMonad.M Σ A) Q,
+    Hoare P f Q -> 
+    Hoare P g Q ->
+    Hoare P h Q ->
+    Hoare P (choice3 f g h) Q.
+Proof.
+  intros.
+  unfold Hoare, choice3; sets_unfold.
+  intros ? ? ? ? ?.
+  destruct H3. destruct H3.
+  + pose proof H _ _ _ H2 H3.
+    tauto.
+  + pose proof H0 _ _ _ H2 H3.
+    tauto.
+  + pose proof H1 _ _ _ H2 H3.
+    tauto.
+Qed.
+
+Theorem Hoare_choice4 {Σ A: Type}:
+  forall P (f g h i: StateRelMonad.M Σ A) Q,
+    Hoare P f Q -> 
+    Hoare P g Q ->
+    Hoare P h Q ->
+    Hoare P i Q ->
+    Hoare P (choice4 f g h i) Q.
+Proof.
+  intros.
+  unfold Hoare, choice4; sets_unfold.
+  intros ? ? ? ? ?.
+  destruct H4. destruct H4. destruct H4.
+  + pose proof H _ _ _ H3 H4.
+    tauto.
+  + pose proof H0 _ _ _ H3 H4.
+    tauto.
+  + pose proof H1 _ _ _ H3 H4.
+    tauto.
+  + pose proof H2 _ _ _ H3 H4.
+    tauto.
+Qed.
+
 Theorem Hoare_test_bind {Σ A: Type}:
   forall P (Q: Σ -> Prop) (f: StateRelMonad.M Σ A) R,
     Hoare (fun s => Q s /\ P s) f R -> 
