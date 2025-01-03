@@ -17,7 +17,7 @@ SETS_FLAG = -R $(SETS_DIR) SetsClass
 
 COMPCERT_FLAG = -R $(COMPCERT_DIR) compcert.lib
 
-DEP_FLAG = -R $(PL_DIR) PL -R $(SETS_DIR) SetsClass -R $(COMPCERT_DIR) compcert.lib
+DEP_FLAG = -R $(HEAP_DIR) HEAP -R $(PL_DIR) PL -R $(SETS_DIR) SetsClass -R $(COMPCERT_DIR) compcert.lib
 
 SETS_FILE_NAMES = \
    SetsClass.v SetsClass_AxiomFree.v SetsDomain.v SetElement.v SetElementProperties.v RelsDomain.v SetProd.v SetsDomain_Classic.v
@@ -36,7 +36,7 @@ PL_FILE_NAMES = \
 PL_FILES=$(PL_FILE_NAMES:%.v=$(PL_DIR)/%.v)
 
 HEAP_FILE_NAMES = \
-	Heap.v
+	Defs.v Heap.v
 
 HEAP_FILES=$(HEAP_FILE_NAMES:%.v=$(HEAP_DIR)/%.v)
 
@@ -59,7 +59,7 @@ $(PL_FILES:%.v=%.vo): %.vo: %.v
 
 $(HEAP_FILES:%.v=%.vo): %.vo: %.v
 	@echo COQC $(<F);
-	@$(COQC) $(PL_FLAG) $<
+	@$(COQC) $(DEP_FLAG) $<
 
 all: $(FILES:%.v=%.vo)
 
