@@ -241,6 +241,7 @@ Definition get_minimum: StateRelMonad.M state Z :=
     BinaryTree.is_root s1.(heap) rt /\ s2 = s1. *)
 
 (* 在v的左儿子插入val *)
+(* to be fixed *)
 
 Definition insert_lc (v val: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
@@ -254,6 +255,7 @@ Definition insert_lc (v val: Z): StateRelMonad.M state unit :=
     ).
 
 (* 在v的右儿子插入val *)
+(* to be fixed *)
 
 Definition insert_rc (v val: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
@@ -267,6 +269,7 @@ Definition insert_rc (v val: Z): StateRelMonad.M state unit :=
     ).
 
 (* 删除叶子v *)
+(* to be fixed *)
 
 Definition delete_leaf (v: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
@@ -372,42 +375,17 @@ Definition body_move_up (v: Z):
 Definition move_up (v: Z): StateRelMonad.M state unit :=
   repeat_break body_move_up v.
 
-Definition body_insert_node (val: Z) (v: Z):
-  StateRelMonad.M state (ContinueOrBreak Z unit) :=
-    choice3
-      (test_lc_empty v;;
-        insert_lc v val;;
-        break tt)
-      (test_lc_not_empty v;;
-        test_rc_empty v;;
-          insert_rc v val;;
-          break tt)
-      (lc <- get_lc v;;
-      rc <- get_rc v;;
-      choice4
-        (test (fun s => is_full_bintree_v s.(heap) lc);;
-          continue lc)
-        (test (fun s => is_complete_bintree_v s.(heap) lc /\ 
-                        is_complete_bintree_v s.(heap) rc /\ 
-                        ~ is_complete_bintree_v s.(heap) v);;
-          continue rc)
-        (test (fun s => is_complete_bintree_v s.(heap) lc /\ 
-                        is_full_bintree_v s.(heap) rc);;
-          continue rc)
-        (test (fun s => is_complete_bintree_v s.(heap) v);;
-          continue lc)).
-    
-Definition insert_node (val: Z): StateRelMonad.M state unit :=
-  rt <- get_minimum;;
-  repeat_break (body_insert_node val) rt.
+Definition ext_insert_node (val: Z): StateRelMonad.M state unit :=
+  fun s1 _ s2 =>
+    (
+      s2.(heap).(vvalid) == s1.(heap).(vvalid) ∪ Sets.singleton val /\
+      (Heap s2.(heap) \/ Heap_broken_up s2.(heap) val) /\
+      is_complete_or_full_bintree s2.(heap)
+    ).
 
 Definition insert (val: Z): StateRelMonad.M state unit :=
-    choice
-      (test_not_empty;;
-        insert_node val;;
-        move_up val)
-      (test_empty;;
-        heap_single val).
+  (ext_insert_node val;;
+  move_up val).
   
 (* Definition insert (val: Z): StateRelMonad.M state unit :=
     choice
@@ -471,50 +449,50 @@ Definition body_move_down (v: Z):
 Definition move_down (v: Z): StateRelMonad.M state unit :=
   repeat_break body_move_down v.
 
-Definition body_delete_node (v: Z):
-  StateRelMonad.M state (ContinueOrBreak Z Z) :=
-    choice3
-      (test_lc_empty v;;
-        rt <- get_minimum;;
-        swap_v_u v rt;;
-        delete_leaf rt;;
-        break v)
-      (test_lc_not_empty v;;
-        test_rc_empty v;;
-          rt <- get_minimum;;
-          lc <- get_lc v;;
-          swap_v_u lc rt;;
-          delete_leaf rt;;
-          break lc)
-      (lc <- get_lc v;;
-      rc <- get_rc v;;
-      choice4
-        (test (fun s => is_full_bintree_v s.(heap) lc);;
-          continue lc)
-        (test (fun s => is_complete_bintree_v s.(heap) lc /\ 
-                        is_complete_bintree_v s.(heap) rc /\ 
-                        ~ is_complete_bintree_v s.(heap) v);;
-          continue lc)
-        (test (fun s => is_complete_bintree_v s.(heap) lc /\ 
-                        is_full_bintree_v s.(heap) rc);;
-          continue rc)
-        (test (fun s => is_complete_bintree_v s.(heap) v);;
-          continue rc)).
-    
-Definition delete_node: StateRelMonad.M state Z :=
-  rt <- get_minimum;;
-  repeat_break body_delete_node rt.
+Definition ext_delete_node (rt: Z): StateRelMonad.M state Z :=
+  fun s1 v s2 =>
+    (
+      ~ s2.(heap).(vvalid) rt /\
+      s2.(heap).(vvalid) ∪ Sets.singleton rt == s1.(heap).(vvalid) /\
+      (Heap s2.(heap) \/ Heap_broken_down s2.(heap) v) /\
+      is_complete_or_full_bintree s2.(heap)
+    ).
+
+Definition delete_iso_node (rt: Z): StateRelMonad.M state unit :=
+  fun s1 _ s2 =>
+    (
+      ~ s2.(heap).(vvalid) rt /\
+      s2.(heap).(vvalid) ∪ Sets.singleton rt == s1.(heap).(vvalid) /\
+      s2.(heap).(evalid) == s1.(heap).(evalid) /\ 
+      forall e: Z, s1.(heap).(evalid) e ->
+        (
+          s2.(heap).(src) e = s1.(heap).(src) e /\
+          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
+          s2.(heap).(go_left) e = s1.(heap).(go_left) e
+        )
+    ).
 
 Definition delete: StateRelMonad.M state Z :=
     rt <- get_minimum;;
     choice
       (test_is_leaf rt;;
-        heap_empty;;
+        delete_iso_node rt;;
+        ret rt)
+      (test_is_not_leaf rt;;
+        v <- ext_delete_node rt;;
+        move_down v;;
+        ret rt).
+
+(* Definition delete: StateRelMonad.M state Z :=
+    rt <- get_minimum;;
+    choice
+      (test_is_leaf rt;;
+        heap_empty;; // 
         ret rt)
       (test_is_not_leaf rt;;
         v <- delete_node;;
         move_down v;;
-        ret rt).
+        ret rt). *)
 
 (* Definition delete: StateRelMonad.M state Z :=
   rt <- get_root;;
