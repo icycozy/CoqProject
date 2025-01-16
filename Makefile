@@ -36,7 +36,7 @@ PL_FILE_NAMES = \
 PL_FILES=$(PL_FILE_NAMES:%.v=$(PL_DIR)/%.v)
 
 HEAP_FILE_NAMES = \
-	Defs.v MoveUp.v MoveDown.v Insert.v Delete.v
+	Defs.v MoveUp.v MoveDown.v Insert.v Delete.v Helpers.v
 
 HEAP_FILES=$(HEAP_FILE_NAMES:%.v=$(HEAP_DIR)/%.v)
 

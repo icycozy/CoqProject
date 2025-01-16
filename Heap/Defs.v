@@ -194,8 +194,8 @@ Definition test_rc_not_empty (v: Z): StateRelMonad.M state unit :=
 
 Definition test_is_leaf (v: Z): StateRelMonad.M state unit :=
   test (fun s => s.(heap).(vvalid) v /\
-                 ~ exists lc, BinaryTree.step_l s.(heap) v lc /\
-                 ~ exists rc, BinaryTree.step_r s.(heap) v rc).
+                 (~ exists lc, BinaryTree.step_l s.(heap) v lc) /\
+                 (~ exists rc, BinaryTree.step_r s.(heap) v rc)).
 
 Definition test_is_not_leaf (v: Z): StateRelMonad.M state unit :=
   test (fun s => exists lc, BinaryTree.step_l s.(heap) v lc \/
@@ -430,6 +430,7 @@ Definition ext_insert_node (val: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
     (
       s2.(heap).(vvalid) == s1.(heap).(vvalid) ∪ Sets.singleton val /\
+      BinaryTree.legal s2.(heap) /\
       (Heap s2.(heap) \/ Heap_broken_up s2.(heap) val) /\
       is_complete_or_full_bintree s2.(heap)
     ).
