@@ -282,8 +282,59 @@ Definition delete_leaf (v: Z): StateRelMonad.M state unit :=
 
 (* 交换节点v与u，
 将边按照src, dst是否是v, u分类讨论 *)
-    
+
 Definition swap_v_u (v u: Z): StateRelMonad.M state unit :=
+  fun s1 _ s2 =>
+    (
+      s2.(heap).(vvalid) == s1.(heap).(vvalid) /\
+      (forall x: Z, ~ x = v -> ~ x = u ->
+        (forall y: Z, ~ y = v -> ~ y = u ->
+          (BinaryTree.step_l s2.(heap) x y <-> BinaryTree.step_l s1.(heap) x y) /\
+          (BinaryTree.step_r s2.(heap) x y <-> BinaryTree.step_r s1.(heap) x y) /\
+          (BinaryTree.step_u s2.(heap) x y <-> BinaryTree.step_u s1.(heap) x y))
+        /\ 
+        (
+          (BinaryTree.step_l s2.(heap) x u <-> BinaryTree.step_l s1.(heap) x v) /\
+          (BinaryTree.step_r s2.(heap) x u <-> BinaryTree.step_r s1.(heap) x v) /\
+          (BinaryTree.step_u s2.(heap) x u <-> BinaryTree.step_u s1.(heap) x v)
+        )
+        /\ 
+        (
+          (BinaryTree.step_l s2.(heap) x v <-> BinaryTree.step_l s1.(heap) x u) /\
+          (BinaryTree.step_r s2.(heap) x v <-> BinaryTree.step_r s1.(heap) x u) /\
+          (BinaryTree.step_u s2.(heap) x v <-> BinaryTree.step_u s1.(heap) x u)
+        )
+      )
+      /\
+      (
+        (forall y: Z, ~ y = v ->
+          (BinaryTree.step_l s2.(heap) u y <-> BinaryTree.step_l s1.(heap) v y) /\
+          (BinaryTree.step_r s2.(heap) u y <-> BinaryTree.step_r s1.(heap) v y) /\
+          (BinaryTree.step_u s2.(heap) u y <-> BinaryTree.step_u s1.(heap) v y))
+        /\ 
+        (
+          (BinaryTree.step_l s2.(heap) u v <-> BinaryTree.step_l s1.(heap) v u) /\
+          (BinaryTree.step_r s2.(heap) u v <-> BinaryTree.step_r s1.(heap) v u) /\
+          (BinaryTree.step_u s2.(heap) u v <-> BinaryTree.step_u s1.(heap) v u)
+        ) 
+      )
+      /\
+      (
+        (forall y: Z, ~ y = u ->
+          (BinaryTree.step_l s2.(heap) v y <-> BinaryTree.step_l s1.(heap) u y) /\
+          (BinaryTree.step_r s2.(heap) v y <-> BinaryTree.step_r s1.(heap) u y) /\
+          (BinaryTree.step_u s2.(heap) v y <-> BinaryTree.step_u s1.(heap) u y)
+        )
+        /\ 
+        (
+          (BinaryTree.step_l s2.(heap) v u <-> BinaryTree.step_l s1.(heap) u v) /\
+          (BinaryTree.step_r s2.(heap) v u <-> BinaryTree.step_r s1.(heap) u v) /\
+          (BinaryTree.step_u s2.(heap) v u <-> BinaryTree.step_u s1.(heap) u v)
+        )
+      ) 
+    ).
+    
+(* Definition swap_v_u (v u: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
     (
       s2.(heap).(vvalid) == s1.(heap).(vvalid) /\
@@ -331,7 +382,7 @@ Definition swap_v_u (v u: Z): StateRelMonad.M state unit :=
                     ~ s1.(heap).(src) e = v ->
                       (s2.(heap).(dst) e = v /\
                       s2.(heap).(src) e = s1.(heap).(src) e))
-    ).
+    ). *)
 
 (* 建立只含一个元素的堆 *)
 
