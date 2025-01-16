@@ -506,29 +506,26 @@ Definition ext_delete_node (rt: Z): StateRelMonad.M state Z :=
     (
       ~ s2.(heap).(vvalid) rt /\
       s2.(heap).(vvalid) ∪ Sets.singleton rt == s1.(heap).(vvalid) /\
+      BinaryTree.legal s2.(heap) /\
       (Heap s2.(heap) \/ Heap_broken_down s2.(heap) v) /\
       is_complete_or_full_bintree s2.(heap)
     ).
 
-Definition delete_iso_node (rt: Z): StateRelMonad.M state unit :=
+Definition ext_delete_iso_node (rt: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
     (
       ~ s2.(heap).(vvalid) rt /\
       s2.(heap).(vvalid) ∪ Sets.singleton rt == s1.(heap).(vvalid) /\
-      s2.(heap).(evalid) == s1.(heap).(evalid) /\ 
-      forall e: Z, s1.(heap).(evalid) e ->
-        (
-          s2.(heap).(src) e = s1.(heap).(src) e /\
-          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
-          s2.(heap).(go_left) e = s1.(heap).(go_left) e
-        )
+      BinaryTree.legal s2.(heap) /\
+      Heap s2.(heap) /\
+      is_complete_or_full_bintree s2.(heap)
     ).
 
 Definition delete: StateRelMonad.M state Z :=
     rt <- get_minimum;;
     choice
       (test_is_leaf rt;;
-        delete_iso_node rt;;
+        ext_delete_iso_node rt;;
         ret rt)
       (test_is_not_leaf rt;;
         v <- ext_delete_node rt;;
