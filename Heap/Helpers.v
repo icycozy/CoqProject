@@ -6,6 +6,7 @@ Require Import PL.Monad2.
 Require Import SetsClass.
 Require Import HEAP.Defs.
 Require Import HEAP.MoveUp.
+Require Import HEAP.MoveDown.
 Import SetsNotation
        StateRelMonad
        StateRelMonadOp
@@ -124,18 +125,113 @@ Proof.
   apply move_up_correctness2.
 Qed.
 
+Lemma lemma1: forall A(x: A) (Y Z:A -> Prop),
+  Y x ->
+  Y ⊆ Z ->
+  Z x.
+Proof.
+  intros.
+  Sets_unfold in H0.
+  intros.
+  apply H0.
+  tauto.
+Qed.
 
-Fact get_minimum_correctness: forall P, 
-  Hoare P get_minimum (fun rt s => P s /\ s.(heap).(vvalid) rt).
+
+Lemma get_min_correctness1: forall (V: Z -> Prop), 
+  Hoare (fun s: state => Abs s.(heap) V /\ 
+                         BinaryTree.legal s.(heap) /\ 
+                         Heap s.(heap))
+        (get_minimum)
+        (fun (val: Z) (s: state) => Abs s.(heap) V /\
+                      BinaryTree.legal s.(heap) /\
+                      Heap s.(heap) /\
+                      is_minimum val V).
 Proof.
   intros.
   unfold Hoare, get_minimum; sets_unfold.
   intros. destruct H0.
-  split.
+  split; [| split; [| split]].
   - apply H1 in H0.
     destruct H0.
     rewrite H2. tauto.
   - assert (HH: s2 = s1).
     { apply H1 in H0. tauto. }
     subst s2. tauto.
+  - apply H1 in H0.
+    destruct H0.
+    rewrite H2. tauto.
+  - unfold is_minimum.
+    intros.
+    apply H1.
+    unfold Abs in H.
+    destruct H.
+    apply Sets_equiv_Sets_included in H.
+    destruct H.
+    apply (lemma1 Z x V s1.(heap).(vvalid) H2 H).
+Qed.
+
+Lemma get_min_correctness2: 
+  Hoare (fun s: state => is_complete_or_full_bintree s.(heap))
+        (get_minimum)
+        (fun _ s => is_complete_or_full_bintree s.(heap)).
+Proof.
+  intros.
+  unfold Hoare, get_minimum; sets_unfold.
+  intros.
+  destruct H0 as [? ?].
+  apply H1 in H0.
+  destruct H0.
+  subst s2.
+  tauto.
+Qed.
+
+Lemma move_down_helper1: forall (val: Z) (v: Z) (V: Z -> Prop),
+  Hoare(fun s: state => s.(heap).(vvalid) v /\
+                        (s.(heap)).(vvalid) ∪ [val] == V /\
+                        is_minimum val V /\
+                        BinaryTree.legal s.(heap) /\
+                        (Heap_broken_down s.(heap) v \/ Heap s.(heap)))
+        (move_down v)
+        (fun _ s => (s.(heap)).(vvalid) ∪ [val] == V /\
+                    is_minimum val V /\
+                    BinaryTree.legal s.(heap) /\ 
+                    Heap s.(heap)).
+Proof.
+  intros.
+  unfold Hoare.
+  intros.
+  destruct H as [? [? [? [? ?]]]].
+  assert (exists V': Z -> Prop, Abs s1.(heap) V').
+  { exists s1.(heap).(vvalid).
+    unfold Abs.
+    reflexivity.
+  }
+  destruct H5 as [V' ?].
+  assert (H_all: s1.(heap).(vvalid) v /\
+                 Abs s1.(heap) V' /\
+                 BinaryTree.legal s1.(heap) /\
+                 (Heap_broken_down s1.(heap) v \/ Heap s1.(heap))).
+  { tauto. }
+  clear H H3 H4 H5.
+  assert (forall v V, Hoare (fun s => s.(heap).(vvalid) v /\
+                                      Abs s.(heap) V /\
+                                      BinaryTree.legal s.(heap) /\
+                                      (Heap_broken_down s.(heap) v \/ Heap s.(heap)))
+                            (move_down v)
+                            (fun _ s => Abs s.(heap) V /\
+                                        BinaryTree.legal s.(heap) /\
+                                        Heap s.(heap))).
+  { apply move_down_correctness1. }
+  unfold Hoare in H.
+  pose proof H v V' s1 a s2 H_all H0.
+  destruct H3 as [? [? ?]].
+  split; [| split; [tauto | tauto]].
+  clear H.
+  destruct H_all as [? [? [? ?]]].
+  unfold Abs in H6.
+  unfold Abs in H3.
+  rewrite <- H3.
+  rewrite H6.
+  tauto.
 Qed.

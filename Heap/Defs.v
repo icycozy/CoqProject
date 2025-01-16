@@ -505,6 +505,7 @@ Definition ext_delete_node (rt: Z): StateRelMonad.M state Z :=
   fun s1 v s2 =>
     (
       ~ s2.(heap).(vvalid) rt /\
+      s2.(heap).(vvalid) v /\
       s2.(heap).(vvalid) ∪ Sets.singleton rt == s1.(heap).(vvalid) /\
       BinaryTree.legal s2.(heap) /\
       (Heap s2.(heap) \/ Heap_broken_down s2.(heap) v) /\
