@@ -30,11 +30,21 @@ Qed.
 
 Fact get_rc_fact: forall (v: Z) P, 
   Hoare P (get_rc v) (fun rc s => P s /\ BinaryTree.step_r s.(heap) v rc).
-Admitted.
+Proof.
+  intros.
+  unfold Hoare, get_rc; sets_unfold.
+  intros. destruct H0.
+  split.
+  - rewrite H1. tauto.
+  - rewrite H1. tauto.
+Qed.
 
 Lemma L1: forall (x y: Z),
   x < y -> x > y -> False.
-Admitted.
+Proof.
+  intros.
+  lia.
+Qed.
 
 Lemma L2: forall (x y z: Z),
   x < y -> y < z -> x < z.
@@ -105,7 +115,11 @@ Proof.
         subst rc'.
         pose proof (L1 v rc H H7). tauto.
     + apply Hoare_test_bind.
-      admit.
+      eapply Hoare_bind; [apply swap_v_u_helper1| cbv beta].
+      intros.
+      apply Hoare_ret'.
+      intros.
+      tauto.
   - apply Hoare_test_bind.
     eapply Hoare_bind; [apply get_lc_fact| cbv beta].
     intros lc.
@@ -129,7 +143,11 @@ Proof.
         { exists rc; apply H5. }
         tauto.
     + apply Hoare_test_bind.
-      admit.
+      eapply Hoare_bind; [apply swap_v_u_helper2| cbv beta].
+      intros.
+      apply Hoare_ret'.
+      intros.
+      tauto.
   - eapply Hoare_bind; [apply get_lc_fact| cbv beta].
     intros lc.
     eapply Hoare_bind; [apply get_rc_fact| cbv beta].
@@ -159,7 +177,11 @@ Proof.
            {pose proof (L2 v lc rc H H0). tauto. }
            pose proof (L1 v rc H8 H7). tauto.
       * apply Hoare_test_bind.
-        admit.
+        eapply Hoare_bind; [apply swap_v_u_helper3| cbv beta].
+        intros.
+        apply Hoare_ret'.
+        intros.
+        tauto.
     + apply Hoare_test_bind.
       apply Hoare_choice.
       * apply Hoare_test_bind.
@@ -186,8 +208,12 @@ Proof.
            subst rc'.
            pose proof (L1 v rc H H7). tauto.
       * apply Hoare_test_bind.
-        admit.
-Admitted.
+        eapply Hoare_bind; [apply swap_v_u_helper4| cbv beta].
+        intros.
+        apply Hoare_ret'.
+        intros.
+        tauto.
+Qed.
 
 
 (* 条件改动时Delete中相应改动 *)
