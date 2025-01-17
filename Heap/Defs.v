@@ -236,177 +236,143 @@ Definition get_minimum: StateRelMonad.M state Z :=
     forall v, s1.(heap).(vvalid) v -> v >= rt /\
     s2 = s1.
 
-(* Definition get_root: StateRelMonad.M state Z :=
-  fun s1 rt s2 =>
-    BinaryTree.is_root s1.(heap) rt /\ s2 = s1. *)
 
-(* 在v的左儿子插入val *)
-(* to be fixed *)
 
-Definition insert_lc (v val: Z): StateRelMonad.M state unit :=
-  fun s1 _ s2 =>
-    (
-      s2.(heap).(vvalid) == s1.(heap).(vvalid) ∪ Sets.singleton val /\
-      exists e: Z, 
-        (s2.(heap).(evalid) == s1.(heap).(evalid) ∪ Sets.singleton e /\
-        s2.(heap).(src) e = v /\
-        s2.(heap).(dst) e = val /\
-        s2.(heap).(go_left) e)
-    ).
+(*********************************************************)
+(**                                                      *)
+(** swap_v_u                                             *)
+(**                                                      *)
+(*********************************************************)
 
-(* 在v的右儿子插入val *)
-(* to be fixed *)
+Inductive ExistOrEmpty: Type :=
+| by_exist (a: Z)
+| by_empty.
 
-Definition insert_rc (v val: Z): StateRelMonad.M state unit :=
-  fun s1 _ s2 =>
-    (
-      s2.(heap).(vvalid) == s1.(heap).(vvalid) ∪ Sets.singleton val /\
-      exists e: Z, 
-        (s2.(heap).(evalid) == s1.(heap).(evalid) ∪ Sets.singleton e /\
-        s2.(heap).(src) e = v /\
-        s2.(heap).(dst) e = val /\
-        s2.(heap).(go_right) e)
-    ).
+Definition get_lc' (v: Z): StateRelMonad.M state ExistOrEmpty :=
+  choice
+    (test_lc_empty v;;
+      ret by_empty)
+    (test_lc_not_empty v;;
+      lc <- get_lc v;;
+      ret (by_exist lc)).
 
-(* 删除叶子v *)
-(* to be fixed *)
+Definition get_rc' (v: Z): StateRelMonad.M state ExistOrEmpty :=
+  choice
+    (test_rc_empty v;;
+      ret by_empty)
+    (test_rc_not_empty v;;
+      rc <- get_rc v;;
+      ret (by_exist rc)).
 
-Definition delete_leaf (v: Z): StateRelMonad.M state unit :=
-  fun s1 _ s2 =>
-    (
-      s2.(heap).(vvalid) ∪ Sets.singleton v == s1.(heap).(vvalid) /\
-      exists e: Z,
-        (s2.(heap).(evalid) ∪ Sets.singleton e == s1.(heap).(evalid) /\
-        s1.(heap).(dst) e = v)
-    ).
+Definition get_fa' (v: Z): StateRelMonad.M state ExistOrEmpty :=
+  choice
+    (test_is_root v;;
+      ret by_empty)
+    (test_is_not_root v;;
+      fa <- get_fa v;;
+      ret (by_exist fa)).
 
-(* 交换节点v与u，
-将边按照src, dst是否是v, u分类讨论 *)
+Definition remove_go_left_edge' (v: Z) (a: ExistOrEmpty)
+  : StateRelMonad.M state unit :=
+    match a with
+    | exist lc => remove_go_left_edge v lc
+    | empty => ret tt
+    end.
 
-Definition swap_v_u (v u: Z): StateRelMonad.M state unit :=
-  fun s1 _ s2 =>
-    (
-      s2.(heap).(vvalid) == s1.(heap).(vvalid) /\
-      (forall x: Z, ~ x = v -> ~ x = u ->
-        (forall y: Z, ~ y = v -> ~ y = u ->
-          (BinaryTree.step_l s2.(heap) x y <-> BinaryTree.step_l s1.(heap) x y) /\
-          (BinaryTree.step_r s2.(heap) x y <-> BinaryTree.step_r s1.(heap) x y) /\
-          (BinaryTree.step_u s2.(heap) x y <-> BinaryTree.step_u s1.(heap) x y))
-        /\ 
-        (
-          (BinaryTree.step_l s2.(heap) x u <-> BinaryTree.step_l s1.(heap) x v) /\
-          (BinaryTree.step_r s2.(heap) x u <-> BinaryTree.step_r s1.(heap) x v) /\
-          (BinaryTree.step_u s2.(heap) x u <-> BinaryTree.step_u s1.(heap) x v)
-        )
-        /\ 
-        (
-          (BinaryTree.step_l s2.(heap) x v <-> BinaryTree.step_l s1.(heap) x u) /\
-          (BinaryTree.step_r s2.(heap) x v <-> BinaryTree.step_r s1.(heap) x u) /\
-          (BinaryTree.step_u s2.(heap) x v <-> BinaryTree.step_u s1.(heap) x u)
-        )
-      )
-      /\
-      (
-        (forall y: Z, ~ y = v ->
-          (BinaryTree.step_l s2.(heap) u y <-> BinaryTree.step_l s1.(heap) v y) /\
-          (BinaryTree.step_r s2.(heap) u y <-> BinaryTree.step_r s1.(heap) v y) /\
-          (BinaryTree.step_u s2.(heap) u y <-> BinaryTree.step_u s1.(heap) v y))
-        /\ 
-        (
-          (BinaryTree.step_l s2.(heap) u v <-> BinaryTree.step_l s1.(heap) v u) /\
-          (BinaryTree.step_r s2.(heap) u v <-> BinaryTree.step_r s1.(heap) v u) /\
-          (BinaryTree.step_u s2.(heap) u v <-> BinaryTree.step_u s1.(heap) v u)
-        ) 
-      )
-      /\
-      (
-        (forall y: Z, ~ y = u ->
-          (BinaryTree.step_l s2.(heap) v y <-> BinaryTree.step_l s1.(heap) u y) /\
-          (BinaryTree.step_r s2.(heap) v y <-> BinaryTree.step_r s1.(heap) u y) /\
-          (BinaryTree.step_u s2.(heap) v y <-> BinaryTree.step_u s1.(heap) u y)
-        )
-        /\ 
-        (
-          (BinaryTree.step_l s2.(heap) v u <-> BinaryTree.step_l s1.(heap) u v) /\
-          (BinaryTree.step_r s2.(heap) v u <-> BinaryTree.step_r s1.(heap) u v) /\
-          (BinaryTree.step_u s2.(heap) v u <-> BinaryTree.step_u s1.(heap) u v)
-        )
-      ) 
-    ).
-    
-(* Definition swap_v_u (v u: Z): StateRelMonad.M state unit :=
+Definition remove_go_right_edge' (v: Z) (a: ExistOrEmpty)
+  : StateRelMonad.M state unit :=
+    match a with
+    | exist rc => remove_go_right_edge v rc
+    | empty => ret tt
+    end.
+
+
+Definition remove_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
     (
       s2.(heap).(vvalid) == s1.(heap).(vvalid) /\
-      s2.(heap).(evalid) == s1.(heap).(evalid) /\
-      forall e: Z, s2.(heap).(go_left) e = s1.(heap).(go_left) e /\ 
-
-      forall e: Z, (s1.(heap).(evalid) e ->
-                    (~ s1.(heap).(src) e = v /\ ~ s1.(heap).(src) e = u) ->
-                    (~ s1.(heap).(dst) e = v /\ ~ s1.(heap).(dst) e = u) ->
-                    s2.(heap).(src) e = s1.(heap).(src) e /\
-                    s2.(heap).(dst) e = s1.(heap).(dst) e) /\ 
-
-      forall e: Z, (s1.(heap).(evalid) e ->
-                    s1.(heap).(src) e = v ->
-                    s1.(heap).(dst) e = u ->
-                      (s2.(heap).(src) e = u /\
-                      s2.(heap).(dst) e = v)) /\
-
-      forall e: Z, (s1.(heap).(evalid) e ->
-                    s1.(heap).(src) e = u ->
-                    s1.(heap).(dst) e = v ->
-                      (s2.(heap).(src) e = v /\
-                      s2.(heap).(dst) e = u)) /\
-
-      forall e: Z, (s1.(heap).(evalid) e ->
-                    s1.(heap).(src) e = v ->
-                    ~ s1.(heap).(dst) e = u ->
-                      (s2.(heap).(src) e = u /\
-                      s2.(heap).(dst) e = s1.(heap).(dst) e)) /\
-
-      forall e: Z, (s1.(heap).(evalid) e ->
-                    s1.(heap).(src) e = u ->
-                    ~ s1.(heap).(dst) e = v ->
-                      (s2.(heap).(src) e = v /\
-                      s2.(heap).(dst) e = s1.(heap).(dst) e)) /\
-
-      forall e: Z, (s1.(heap).(evalid) e ->
-                    s1.(heap).(dst) e = v ->
-                    ~ s1.(heap).(src) e = u ->
-                      (s2.(heap).(dst) e = u /\
-                      s2.(heap).(src) e = s1.(heap).(src) e)) /\
-
-      forall e: Z, (s1.(heap).(evalid) e ->
-                    s1.(heap).(dst) e = u ->
-                    ~ s1.(heap).(src) e = v ->
-                      (s2.(heap).(dst) e = v /\
-                      s2.(heap).(src) e = s1.(heap).(src) e))
-    ). *)
-
-(* 建立只含一个元素的堆 *)
-
-Definition heap_single (v: Z): StateRelMonad.M state unit :=
-  fun s1 _ s2 =>
-    (
-      s2.(heap).(vvalid) == Sets.singleton v /\
-      s2.(heap).(evalid) == Sets.empty
+      (exists e0: Z, 
+        ~ s2.(heap).(evalid) e0 /\
+        s2.(heap).(evalid) ∪ Sets.singleton e0 == s1.(heap).(evalid) /\
+        s2.(heap).(src) e0 = v /\
+        s2.(heap).(dst) e0 = lc /\
+        s2.(heap).(go_left) e0 /\ 
+        (forall e: Z, ~ e = e0 ->
+          s2.(heap).(src) e = s1.(heap).(src) e /\ 
+          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
+          s2.(heap).(go_left) e = s1.(heap).(go_left) e))
     ).
 
-(* 建立空堆 *)
-
-Definition heap_empty: StateRelMonad.M state unit :=
+Definition remove_go_right_edge (v rc: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
     (
-      s2.(heap).(vvalid) == Sets.empty /\
-      s2.(heap).(evalid) == Sets.empty
+      s2.(heap).(vvalid) == s1.(heap).(vvalid) /\
+      (exists e0: Z, 
+        ~ s2.(heap).(evalid) e0 /\
+        s2.(heap).(evalid) ∪ Sets.singleton e0 == s1.(heap).(evalid) /\
+        s2.(heap).(src) e0 = v /\
+        s2.(heap).(dst) e0 = rc /\
+        ~ s2.(heap).(go_left) e0 /\ 
+        (forall e: Z, ~ e = e0 ->
+          s2.(heap).(src) e = s1.(heap).(src) e /\ 
+          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
+          s2.(heap).(go_left) e = s1.(heap).(go_left) e))
     ).
+
+Definition add_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
+  fun s1 _ s2 =>
+    (
+      s2.(heap).(vvalid) == s1.(heap).(vvalid) /\
+      (exists e0: Z, 
+        ~ s1.(heap).(evalid) e0 /\
+        s2.(heap).(evalid) == s1.(heap).(evalid) ∪ Sets.singleton e0 /\
+        s2.(heap).(src) e0 = v /\
+        s2.(heap).(dst) e0 = lc /\
+        s2.(heap).(go_left) e0 /\ 
+        (forall e: Z, ~ e = e0 ->
+          s2.(heap).(src) e = s1.(heap).(src) e /\ 
+          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
+          s2.(heap).(go_left) e = s1.(heap).(go_left) e))
+    ).
+
+Definition add_go_right_edge (v rc: Z): StateRelMonad.M state unit :=
+  fun s1 _ s2 =>
+    (
+      s2.(heap).(vvalid) == s1.(heap).(vvalid) /\
+      (exists e0: Z, 
+        ~ s1.(heap).(evalid) e0 /\
+        (s2.(heap).(evalid) == s1.(heap).(evalid) ∪ Sets.singleton e0 /\
+        s2.(heap).(src) e0 = v /\
+        s2.(heap).(dst) e0 = rc /\
+        ~ s2.(heap).(go_left) e0) /\ 
+        (forall e: Z, ~ e = e0 ->
+          s2.(heap).(src) e = s1.(heap).(src) e /\ 
+          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
+          s2.(heap).(go_left) e = s1.(heap).(go_left) e))
+    ).
+
+Definition swap_v_u (v fa: Z): StateRelMonad.M state unit :=
+  lc_v <- get_lc' v;;
+  rc_v <- get_rc' v;;
+  lc_fa <- get_lc' fa;;
+  rc_fa <- get_rc' fa;;
+  fa_fa <- get_fa' fa;;
+  choice
+    (test (fun s => BinaryTree.step_l s.(heap) fa v);;
+      remove_go_left_edge' v lc_v;;
+      remove_go_right_edge' v rc_v;;
+      remove_go_left_edge' fa lc_fa;;
+      remove_go_right_edge' fa rc_fa;;
+    )
+    (test (fun s => BinaryTree.step_r s.(heap) fa v);;
+      )
 
 (*********************************************************)
 (**                                                      *)
 (** insert                                               *)
 (**                                                      *)
 (*********************************************************)
+
 
 (* 从v开始向上调整 *)
 
@@ -438,19 +404,7 @@ Definition ext_insert_node (val: Z): StateRelMonad.M state unit :=
 Definition insert (val: Z): StateRelMonad.M state unit :=
   (ext_insert_node val;;
   move_up val).
-  
-(* Definition insert (val: Z): StateRelMonad.M state unit :=
-    choice
-      (v <- any_valid_v;;
-       choice
-        (test_lc_empty v;;
-          insert_lc v val;;
-          move_up val)
-        (test_rc_empty v;;
-          insert_rc v val;;  
-          move_up val))
-      (test_empty;;
-        heap_single val). *)
+
 
 (*********************************************************)
 (**                                                      *)
@@ -531,32 +485,6 @@ Definition delete: StateRelMonad.M state Z :=
         v <- ext_delete_node rt;;
         move_down v;;
         ret rt).
-
-(* Definition delete: StateRelMonad.M state Z :=
-    rt <- get_minimum;;
-    choice
-      (test_is_leaf rt;;
-        heap_empty;; // 
-        ret rt)
-      (test_is_not_leaf rt;;
-        v <- delete_node;;
-        move_down v;;
-        ret rt). *)
-
-(* Definition delete: StateRelMonad.M state Z :=
-  rt <- get_root;;
-  v <- any_valid_v;;
-  test_lc_empty v;;
-  test_rc_empty v;;
-  choice
-    (test (fun s => v = rt);;
-      heap_empty;;
-      ret rt)
-    (test (fun s => ~ v = rt);;
-      swap_v_u v rt;;
-      delete_leaf rt;;
-      move_down v;;
-      ret rt). *)
 
 Definition is_minimum (val: Z) (V: Z -> Prop): Prop :=
     forall x, V x -> x >= val.
