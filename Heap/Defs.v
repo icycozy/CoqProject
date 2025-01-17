@@ -252,40 +252,22 @@ Definition get_lc' (v: Z): StateRelMonad.M state ExistOrEmpty :=
   choice
     (test_lc_empty v;;
       ret by_empty)
-    (test_lc_not_empty v;;
-      lc <- get_lc v;;
-      ret (by_exist lc)).
+    (lc <- get_lc v;;
+    ret (by_exist lc)).
 
 Definition get_rc' (v: Z): StateRelMonad.M state ExistOrEmpty :=
   choice
     (test_rc_empty v;;
       ret by_empty)
-    (test_rc_not_empty v;;
-      rc <- get_rc v;;
-      ret (by_exist rc)).
+    (rc <- get_rc v;;
+    ret (by_exist rc)).
 
 Definition get_fa' (v: Z): StateRelMonad.M state ExistOrEmpty :=
   choice
     (test_is_root v;;
       ret by_empty)
-    (test_is_not_root v;;
-      fa <- get_fa v;;
-      ret (by_exist fa)).
-
-Definition remove_go_left_edge' (v: Z) (a: ExistOrEmpty)
-  : StateRelMonad.M state unit :=
-    match a with
-    | exist lc => remove_go_left_edge v lc
-    | empty => ret tt
-    end.
-
-Definition remove_go_right_edge' (v: Z) (a: ExistOrEmpty)
-  : StateRelMonad.M state unit :=
-    match a with
-    | exist rc => remove_go_right_edge v rc
-    | empty => ret tt
-    end.
-
+    (fa <- get_fa v;;
+    ret (by_exist fa)).
 
 Definition remove_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
@@ -351,21 +333,71 @@ Definition add_go_right_edge (v rc: Z): StateRelMonad.M state unit :=
           s2.(heap).(go_left) e = s1.(heap).(go_left) e))
     ).
 
+Definition remove_go_left_edge' (v: Z) (a: ExistOrEmpty)
+  : StateRelMonad.M state unit :=
+    match a with
+    | by_exist lc => remove_go_left_edge v lc
+    | by_empty => ret tt
+    end.
+
+Definition remove_go_right_edge' (v: Z) (a: ExistOrEmpty)
+  : StateRelMonad.M state unit :=
+    match a with
+    | by_exist rc => remove_go_right_edge v rc
+    | by_empty => ret tt
+    end.
+
+Definition add_go_left_edge' (v: Z) (a: ExistOrEmpty)
+  : StateRelMonad.M state unit :=
+    match a with
+    | by_exist lc => add_go_left_edge v lc
+    | by_empty => ret tt
+    end.
+
+Definition add_go_right_edge' (v: Z) (a: ExistOrEmpty)
+  : StateRelMonad.M state unit :=
+    match a with
+    | by_exist rc => add_go_right_edge v rc
+    | by_empty => ret tt
+    end.  
+
+Definition get_dir (fa v: Z): StateRelMonad.M state Z :=
+  fun s1 dir s2 =>
+    (
+      (dir = 0 /\ BinaryTree.step_l s2.(heap) fa v /\ s2 = s1) \/
+      (dir = 1 /\ BinaryTree.step_r s2.(heap) fa v /\ s2 = s1)
+    ).
+
 Definition swap_v_u (v fa: Z): StateRelMonad.M state unit :=
   lc_v <- get_lc' v;;
   rc_v <- get_rc' v;;
   lc_fa <- get_lc' fa;;
   rc_fa <- get_rc' fa;;
-  fa_fa <- get_fa' fa;;
-  choice
-    (test (fun s => BinaryTree.step_l s.(heap) fa v);;
-      remove_go_left_edge' v lc_v;;
-      remove_go_right_edge' v rc_v;;
-      remove_go_left_edge' fa lc_fa;;
-      remove_go_right_edge' fa rc_fa;;
-    )
-    (test (fun s => BinaryTree.step_r s.(heap) fa v);;
-      )
+  dir_fa_v <- get_dir fa v;;
+  remove_go_left_edge' v lc_v;;
+  remove_go_right_edge' v rc_v;;
+  remove_go_left_edge' fa lc_fa;;
+  remove_go_right_edge' fa rc_fa;;
+  (choice
+    (test_is_root fa)
+    (gf <- get_fa fa;;
+      choice
+        (test (fun s => BinaryTree.step_l s.(heap) gf fa);;
+          remove_go_left_edge gf fa;;
+          add_go_left_edge gf v)
+        (test (fun s => BinaryTree.step_r s.(heap) gf fa);;
+          remove_go_right_edge gf fa;;
+          add_go_right_edge gf v)));;
+  (choice
+    (test (fun s => dir_fa_v = 0);;
+      add_go_left_edge v fa;;
+      add_go_right_edge' v rc_fa)
+    (test (fun s => dir_fa_v = 1);;
+      add_go_left_edge' v lc_fa;;
+      add_go_right_edge v fa));;
+  add_go_left_edge' fa lc_v;;
+  add_go_right_edge' fa rc_v.
+
 
 (*********************************************************)
 (**                                                      *)

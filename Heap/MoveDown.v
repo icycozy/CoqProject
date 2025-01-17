@@ -6,7 +6,7 @@ Require Import PL.Monad.
 Require Import PL.Monad2.
 Require Import SetsClass.
 Require Import HEAP.Defs.
-Require Import HEAP.MoveUp.
+Require Import HEAP.Swapvu.
 Import SetsNotation
        StateRelMonad
        StateRelMonadOp

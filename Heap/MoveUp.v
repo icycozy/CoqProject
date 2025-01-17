@@ -5,6 +5,7 @@ Require Import PL.Monad.
 Require Import PL.Monad2.
 Require Import SetsClass.
 Require Import HEAP.Defs.
+Require Import HEAP.Swapvu.
 Require Import Classical.
 Require Import Coq.Setoids.Setoid.
 Require Import Coq.micromega.Psatz.
@@ -129,7 +130,7 @@ Fact swap_v_fa_fact1: forall (v fa: Z) (V: Z -> Prop),
                 Abs s.(heap) V /\
                 BinaryTree.legal s.(heap) /\
                 (Heap s.(heap) \/ Heap_broken_up s.(heap) v)).
-Proof.
+Admitted.
   
 
 
@@ -194,20 +195,6 @@ Proof.
       apply H2.
 Qed.
 
-(* 有些条件多余 *)
-
-Fact swap_v_fa_fact2: forall (v fa: Z), 
-  Hoare
-    (fun s => v < fa /\
-              ((s.(heap)).(vvalid) v /\
-                BinaryTree.legal s.(heap) /\
-                is_complete_or_full_bintree s.(heap)) /\
-              BinaryTree.step_u s.(heap) v fa)
-    (swap_v_u v fa)
-    (fun _ s => (s.(heap)).(vvalid) v /\
-                BinaryTree.legal s.(heap) /\
-                is_complete_or_full_bintree s.(heap)).
-Admitted.
 
 Theorem move_up_correctness2: forall (v: Z),
   Hoare (fun s => s.(heap).(vvalid) v /\
