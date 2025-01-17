@@ -376,8 +376,13 @@ Definition swap_v_u (v fa: Z): StateRelMonad.M state unit :=
   dir_fa_v <- get_dir fa v;;
   remove_go_left_edge' v lc_v;;
   remove_go_right_edge' v rc_v;;
-  remove_go_left_edge' fa lc_fa;;
-  remove_go_right_edge' fa rc_fa;;
+  (choice
+    (test (fun s => dir_fa_v = 0);;
+      remove_go_left_edge fa v;;
+      remove_go_right_edge' fa rc_fa)
+    (test (fun s => dir_fa_v = 1);;
+      remove_go_right_edge fa v;;
+      remove_go_left_edge' fa lc_fa));;
   (choice
     (test_is_root fa)
     (gf <- get_fa fa;;

@@ -54,8 +54,8 @@ Qed.
 Fact get_rc'_fact: forall (v: Z) P, 
   Hoare P (get_rc' v)
     (fun a s => P s /\ match a with
-                      | by_exist rc => BinaryTree.step_l s.(heap) v rc
-                      | by_empty => True
+                      | by_exist rc => BinaryTree.step_r s.(heap) v rc
+                      | by_empty => ~ (exists x, BinaryTree.step_r s.(heap) v x)
                       end).
 Admitted.
 
@@ -117,8 +117,59 @@ Proof.
   eapply Hoare_bind; [apply get_lc'_fact| cbv beta; intros lc_fa].
   eapply Hoare_bind; [apply get_rc'_fact| cbv beta; intros rc_fa].
   eapply Hoare_bind; [apply get_dir_fact| cbv beta; intros dir_fa_v].
+  eapply Hoare_bind.
+  { eapply Hoare_conseq_pre.
+    2: { apply remove_go_left_edge'_fact2. }
+    + tauto. }
+  cbv beta; intros _.
+  eapply Hoare_bind.
+  { eapply Hoare_conj3.
+    {
+      eapply Hoare_conseq_pre.
+      2: { apply remove_go_right_edge'_fact2. }
+      tauto.
+    } { 
+      eapply Hoare_conseq_pre.
+      2: { apply (remove_go_right_edge'_fact3_l _ _ v). }
+      tauto.
+    } {
+      eapply Hoare_conseq_pre.
+      2: { apply (remove_go_right_edge'_fact4_u _ _ lc_v). }
+      tauto.
+    }
+  }
+  cbv beta; intros _.
+  eapply Hoare_bind.
+  {
+    apply Hoare_choice.
+    {
+      apply Hoare_test_bind.
+      eapply Hoare_bind.
+      {
+        eapply Hoare_conj5.
+        {
+          eapply Hoare_conseq_pre.
+          2: { apply remove_go_right_edge'_fact2. }
+          tauto.
+        } { 
+          eapply Hoare_conseq_pre.
+          2: { apply (remove_go_right_edge'_fact3_l _ _ v). }
+          tauto.
+        } {
+          eapply Hoare_conseq_pre.
+          2: { apply (remove_go_right_edge'_fact4_u _ _ lc_v). }
+          tauto.
+        }
+      }
+      
+    }
+  cbv beta; intros _.
+  
+
+  
+
 Admitted.
-  (* eapply Hoare_bind.
+  (* 
   - apply (remove_go_left_edge'_fact2 v lc_v). *)
 
   

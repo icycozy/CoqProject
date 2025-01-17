@@ -739,6 +739,50 @@ Proof.
   + apply (H0 _ _ _ H1 H2).
 Qed.  
 
+Theorem Hoare_conj3 {Σ A: Type}:
+  forall (P: Σ -> Prop) f (Q1 Q2 Q3: A -> Σ -> Prop),
+    Hoare P f Q1 ->
+    Hoare P f Q2 ->
+    Hoare P f Q3 ->
+    Hoare P f (fun a s => Q1 a s /\ Q2 a s /\ Q3 a s).
+Admitted.
+
+Theorem Hoare_conj5 {Σ A: Type}:
+  forall (P: Σ -> Prop) f (Q1 Q2 Q3 Q4 Q5: A -> Σ -> Prop),
+    Hoare P f Q1 ->
+    Hoare P f Q2 ->
+    Hoare P f Q3 ->
+    Hoare P f Q4 ->
+    Hoare P f Q5 ->
+    Hoare P f (fun a s => Q1 a s /\ Q2 a s /\ Q3 a s /\ Q4 a s /\ Q5 a s).
+Admitted.
+
+Theorem Hoare_conj7 {Σ A: Type}:
+  forall (P: Σ -> Prop) f (Q1 Q2 Q3 Q4 Q5 Q6 Q7: A -> Σ -> Prop),
+    Hoare P f Q1 ->
+    Hoare P f Q2 ->
+    Hoare P f Q3 ->
+    Hoare P f Q4 ->
+    Hoare P f Q5 ->
+    Hoare P f Q6 ->
+    Hoare P f Q7 ->
+    Hoare P f (fun a s => Q1 a s /\ Q2 a s /\ Q3 a s /\ Q4 a s /\ Q5 a s /\ Q6 a s /\ Q7 a s).
+Admitted.
+
+Theorem Hoare_conj9 {Σ A: Type}:
+  forall (P: Σ -> Prop) f (Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9: A -> Σ -> Prop),
+    Hoare P f Q1 ->
+    Hoare P f Q2 ->
+    Hoare P f Q3 ->
+    Hoare P f Q4 ->
+    Hoare P f Q5 ->
+    Hoare P f Q6 ->
+    Hoare P f Q7 ->
+    Hoare P f Q8 ->
+    Hoare P f Q9 ->
+    Hoare P f (fun a s => Q1 a s /\ Q2 a s /\ Q3 a s /\ Q4 a s /\ Q5 a s /\ Q6 a s /\ Q7 a s /\ Q8 a s /\ Q9 a s).
+Admitted.
+
 Theorem Hoare_forall {Σ A: Type}:
   forall (X: Type) (P: Σ -> Prop) f (Q: X -> A -> Σ -> Prop),
     (forall x, Hoare P f (Q x)) ->
