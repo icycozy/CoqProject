@@ -43,7 +43,8 @@ Fact remove_go_right_edge'_fact1:
 Admitted.
 
 
-
+(*********************************************************)
+(*********************************************************)
 
 Fact remove_go_left_edge_fact2: forall (v lc: Z),
   Hoare (fun s => BinaryTree.legal s.(heap))
@@ -60,6 +61,9 @@ Fact remove_go_right_edge_fact2: forall (v rc: Z),
                     ~ (exists x, BinaryTree.step_r s.(heap) v x) /\ 
                     ~ (exists x, BinaryTree.step_u s.(heap) rc x)).
 Admitted.
+
+(*********************************************************)
+(*********************************************************)
 
 Fact remove_go_left_edge'_fact2:
   forall (v: Z) (a: ExistOrEmpty),
@@ -88,21 +92,66 @@ Admitted.
 (*********************************************************)
 (*********************************************************)
 
-Fact remove_go_left_edge'_fact_l:
+Fact remove_go_left_edge_fact3_l:
+  forall (v: Z) (a: Z) (u: Z),
+    Hoare (fun s => ~ exists x, BinaryTree.step_l s.(heap) u x)
+          (remove_go_left_edge v a)
+          (fun _ s => ~ exists x, BinaryTree.step_l s.(heap) u x).
+Admitted.
+
+Fact remove_go_left_edge_fact3_r:
+  forall (v: Z) (a: Z) (u: Z),
+    Hoare (fun s => ~ exists x, BinaryTree.step_r s.(heap) u x)
+          (remove_go_left_edge v a)
+          (fun _ s => ~ exists x, BinaryTree.step_r s.(heap) u x).
+Admitted.
+
+Fact remove_go_left_edge_fact3_u:
+  forall (v: Z) (a: Z) (u: Z),
+    Hoare (fun s => ~ exists x, BinaryTree.step_u s.(heap) u x)
+          (remove_go_left_edge v a)
+          (fun _ s => ~ exists x, BinaryTree.step_u s.(heap) u x).
+Admitted.
+
+Fact remove_go_right_edge_fact3_l:
+  forall (v: Z) (a: Z) (u: Z),
+    Hoare (fun s => ~ exists x, BinaryTree.step_l s.(heap) u x)
+          (remove_go_right_edge v a)
+          (fun _ s => ~ exists x, BinaryTree.step_l s.(heap) u x).
+Admitted.
+
+Fact remove_go_right_edge_fact3_r:
+  forall (v: Z) (a: Z) (u: Z),
+    Hoare (fun s => ~ exists x, BinaryTree.step_r s.(heap) u x)
+          (remove_go_right_edge v a)
+          (fun _ s => ~ exists x, BinaryTree.step_r s.(heap) u x).
+Admitted.
+
+Fact remove_go_right_edge_fact3_u:
+  forall (v: Z) (a: Z) (u: Z),
+    Hoare (fun s => ~ exists x, BinaryTree.step_u s.(heap) u x)
+          (remove_go_right_edge v a)
+          (fun _ s => ~ exists x, BinaryTree.step_u s.(heap) u x).
+Admitted.
+
+(*********************************************************)
+(*********************************************************)
+
+Fact remove_go_left_edge'_fact3_l:
   forall (v: Z) (a: ExistOrEmpty) (u: Z),
     Hoare (fun s => ~ exists x, BinaryTree.step_l s.(heap) u x)
           (remove_go_left_edge' v a)
           (fun _ s => ~ exists x, BinaryTree.step_l s.(heap) u x).
 Admitted.
 
-Fact remove_go_left_edge'_fact_r:
+Fact remove_go_left_edge'_fact3_r:
   forall (v: Z) (a: ExistOrEmpty) (u: Z),
     Hoare (fun s => ~ exists x, BinaryTree.step_r s.(heap) u x)
           (remove_go_left_edge' v a)
           (fun _ s => ~ exists x, BinaryTree.step_r s.(heap) u x).
 Admitted.
 
-Fact remove_go_left_edge'_fact_u:
+Fact remove_go_left_edge'_fact3_u:
   forall (v: Z) (a: ExistOrEmpty) (u: Z),
     Hoare (fun s => ~ exists x, BinaryTree.step_u s.(heap) u x)
           (remove_go_left_edge' v a)
@@ -133,13 +182,95 @@ Admitted.
 (*********************************************************)
 (*********************************************************)
 
+Fact remove_go_left_edge_fact4_l:
+  forall (v: Z) (a: Z) (u: ExistOrEmpty),
+    Hoare (fun s => match u with
+                    | by_exist lc => ~ (exists x : Z, BinaryTree.step_l s.(heap) lc x)
+                    | by_empty => True
+                    end)
+          (remove_go_left_edge v a)
+          (fun _ s => match u with
+                      | by_exist lc => ~ (exists x : Z, BinaryTree.step_l s.(heap) lc x)
+                      | by_empty => True
+                      end).
+Admitted.
+
+Fact remove_go_left_edge_fact4_r:
+  forall (v: Z) (a: Z) (u: ExistOrEmpty),
+    Hoare (fun s => match u with
+                    | by_exist lc => ~ (exists x : Z, BinaryTree.step_r s.(heap) lc x)
+                    | by_empty => True
+                    end)
+          (remove_go_left_edge v a)
+          (fun _ s => match u with
+                      | by_exist lc => ~ (exists x : Z, BinaryTree.step_r s.(heap) lc x)
+                      | by_empty => True
+                      end).
+Admitted.
+
+Fact remove_go_left_edge_fact4_u:
+  forall (v: Z) (a: Z) (u: ExistOrEmpty),
+    Hoare (fun s => match u with
+                    | by_exist lc => ~ (exists x : Z, BinaryTree.step_u s.(heap) lc x)
+                    | by_empty => True
+                    end)
+          (remove_go_left_edge v a)
+          (fun _ s => match u with
+                      | by_exist lc => ~ (exists x : Z, BinaryTree.step_u s.(heap) lc x)
+                      | by_empty => True
+                      end).
+Admitted.
+
+Fact remove_go_right_edge_fact4_l:
+  forall (v: Z) (a: Z) (u: ExistOrEmpty),
+    Hoare (fun s => match u with
+                    | by_exist lc => ~ (exists x : Z, BinaryTree.step_l s.(heap) lc x)
+                    | by_empty => True
+                    end)
+          (remove_go_right_edge v a)
+          (fun _ s => match u with
+                      | by_exist lc => ~ (exists x : Z, BinaryTree.step_l s.(heap) lc x)
+                      | by_empty => True
+                      end).
+Admitted.
+
+Fact remove_go_right_edge_fact4_r:
+  forall (v: Z) (a: Z) (u: ExistOrEmpty),
+    Hoare (fun s => match u with
+                    | by_exist lc => ~ (exists x : Z, BinaryTree.step_r s.(heap) lc x)
+                    | by_empty => True
+                    end)
+          (remove_go_right_edge v a)
+          (fun _ s => match u with
+                      | by_exist lc => ~ (exists x : Z, BinaryTree.step_r s.(heap) lc x)
+                      | by_empty => True
+                      end).
+Admitted.
+
+Fact remove_go_right_edge_fact4_u:
+  forall (v: Z) (a: Z) (u: ExistOrEmpty),
+    Hoare (fun s => match u with
+                    | by_exist lc => ~ (exists x : Z, BinaryTree.step_u s.(heap) lc x)
+                    | by_empty => True
+                    end)
+          (remove_go_right_edge v a)
+          (fun _ s => match u with
+                      | by_exist lc => ~ (exists x : Z, BinaryTree.step_u s.(heap) lc x)
+                      | by_empty => True
+                      end).
+Admitted.
+
+
+(*********************************************************)
+(*********************************************************)
+
 Fact remove_go_left_edge'_fact4_l:
   forall (v: Z) (a: ExistOrEmpty) (u: ExistOrEmpty),
     Hoare (fun s => match u with
                     | by_exist lc => ~ (exists x : Z, BinaryTree.step_l s.(heap) lc x)
                     | by_empty => True
                     end)
-          (remove_go_right_edge' v a)
+          (remove_go_left_edge' v a)
           (fun _ s => match u with
                       | by_exist lc => ~ (exists x : Z, BinaryTree.step_l s.(heap) lc x)
                       | by_empty => True
@@ -152,7 +283,7 @@ Fact remove_go_left_edge'_fact4_r:
                     | by_exist lc => ~ (exists x : Z, BinaryTree.step_r s.(heap) lc x)
                     | by_empty => True
                     end)
-          (remove_go_right_edge' v a)
+          (remove_go_left_edge' v a)
           (fun _ s => match u with
                       | by_exist lc => ~ (exists x : Z, BinaryTree.step_r s.(heap) lc x)
                       | by_empty => True
@@ -165,7 +296,7 @@ Fact remove_go_left_edge'_fact4_u:
                     | by_exist lc => ~ (exists x : Z, BinaryTree.step_u s.(heap) lc x)
                     | by_empty => True
                     end)
-          (remove_go_right_edge' v a)
+          (remove_go_left_edge' v a)
           (fun _ s => match u with
                       | by_exist lc => ~ (exists x : Z, BinaryTree.step_u s.(heap) lc x)
                       | by_empty => True
