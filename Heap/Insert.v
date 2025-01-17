@@ -45,7 +45,7 @@ Proof.
   rewrite H.
   rewrite <- H0.
   reflexivity.
-Qed. 
+Qed.
 
 Theorem ext_insert_node_correctness2: forall (val: Z) (V: Z -> Prop),
   Hoare (fun s => Abs s.(heap) V /\
