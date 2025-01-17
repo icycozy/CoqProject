@@ -165,7 +165,7 @@ Proof.
     }
   cbv beta; intros _.
   
-
+  }
   
 
 Admitted.
@@ -176,5 +176,79 @@ Admitted.
   
 
 
-  
-  
+Fact swap_v_u_helper1: forall (v rc: Z) (V: Z -> Prop),
+  Hoare
+    (fun s : state =>
+                      v > rc /\
+                      (((s.(heap)).(vvalid) v /\
+                        ~ (exists lc : Z, BinaryTree.step_l s.(heap) v lc)) /\
+                        (s.(heap)).(vvalid) v /\
+                        Abs s.(heap) V /\
+                        BinaryTree.legal s.(heap) /\
+                        (Heap_broken_down s.(heap) v \/ Heap s.(heap))) /\
+                      BinaryTree.step_r s.(heap) v rc)
+    (swap_v_u v rc)
+    (fun (_ : unit) (s : state) =>
+                      (s.(heap)).(vvalid) v /\
+                      Abs s.(heap) V /\
+                      BinaryTree.legal s.(heap) /\
+                      (Heap_broken_down s.(heap) v \/ Heap s.(heap))).
+Admitted.
+
+Fact swap_v_u_helper2: forall (v lc: Z) (V: Z -> Prop),
+  Hoare
+    (fun s : state =>
+                      v > lc /\
+                      (((s.(heap)).(vvalid) v /\
+                        ~ (exists rc : Z, BinaryTree.step_r s.(heap) v rc)) /\
+                      (s.(heap)).(vvalid) v /\
+                      Abs s.(heap) V /\
+                      BinaryTree.legal s.(heap) /\
+                      (Heap_broken_down s.(heap) v \/ Heap s.(heap))) /\
+                      BinaryTree.step_l s.(heap) v lc)
+    (swap_v_u v lc)
+    (fun (_ : unit) (s : state) =>
+                      (s.(heap)).(vvalid) v /\
+                      Abs s.(heap) V /\
+                      BinaryTree.legal s.(heap) /\
+                      (Heap_broken_down s.(heap) v \/ Heap s.(heap))).
+Admitted.
+
+Fact swap_v_u_helper3: forall (v lc rc: Z) (V: Z -> Prop),
+  Hoare
+    (fun s : state =>
+                      v > lc /\
+                      lc < rc /\
+                      (((s.(heap)).(vvalid) v /\
+                        Abs s.(heap) V /\
+                        BinaryTree.legal s.(heap) /\
+                        (Heap_broken_down s.(heap) v \/ Heap s.(heap))) /\
+                      BinaryTree.step_l s.(heap) v lc) /\
+                      BinaryTree.step_r s.(heap) v rc)
+    (swap_v_u v lc)
+    (fun (_ : unit) (s : state) =>
+                      (s.(heap)).(vvalid) v /\
+                      Abs s.(heap) V /\
+                      BinaryTree.legal s.(heap) /\
+                      (Heap_broken_down s.(heap) v \/ Heap s.(heap))).
+Admitted.
+
+Fact swap_v_u_helper4: forall (v lc rc: Z) (V: Z -> Prop),
+  Hoare
+    (fun s : state =>
+                      v > rc /\
+                      lc > rc /\
+                      (((s.(heap)).(vvalid) v /\
+                        Abs s.(heap) V /\
+                        BinaryTree.legal s.(heap) /\
+                        (Heap_broken_down s.(heap) v \/ Heap s.(heap))) /\
+                      BinaryTree.step_l s.(heap) v lc) /\
+                      BinaryTree.step_r s.(heap) v rc) 
+    (swap_v_u v rc)
+    (fun (_ : unit) (s : state) =>  
+                      (s.(heap)).(vvalid) v /\
+                      Abs s.(heap) V /\
+                      BinaryTree.legal s.(heap) /\
+                      (Heap_broken_down s.(heap) v \/ Heap s.(heap))).
+Admitted.
+
