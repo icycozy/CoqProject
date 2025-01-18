@@ -68,9 +68,6 @@ Definition step_u {V E: Type} (bt: BinaryTree V E) (x y: V): Prop :=
 
 Record legal {V E: Type} (bt: BinaryTree V E): Prop :=
 {
-  step_l_unique: forall x y1 y2, step_l bt x y1 -> step_l bt x y2 -> y1 = y2;
-  step_r_unique: forall x y1 y2, step_r bt x y1 -> step_r bt x y2 -> y1 = y2;
-  step_u_unique: forall x y1 y2, step_u bt x y1 -> step_u bt x y2 -> y1 = y2;
   edge_l_unique: forall x y1 y2, 
                   exists e1, step_aux bt e1 x y1 /\ bt.(go_left) e1 ->
                   exists e2, step_aux bt e2 x y2 /\ bt.(go_left) e2 -> e1 = e2;
@@ -288,8 +285,8 @@ Definition remove_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
         BinaryTree.step_aux s1.(heap) e0 v lc /\
         s1.(heap).(go_left) e0 /\ 
         (forall e: Z, ~ e = e0 ->
-          s2.(heap).(src) e = s1.(heap).(src) e /\ 
-          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
+          forall x y, (BinaryTree.step_aux s2.(heap) e x y <->
+                       BinaryTree.step_aux s1.(heap) e x y) /\
           s2.(heap).(go_left) e = s1.(heap).(go_left) e))
     ).
 
@@ -301,11 +298,11 @@ Definition remove_go_right_edge (v rc: Z): StateRelMonad.M state unit :=
         ~ s2.(heap).(evalid) e0 /\
         s2.(heap).(evalid) ∪ Sets.singleton e0 == s1.(heap).(evalid) /\
         BinaryTree.step_aux s1.(heap) e0 v rc /\
-        ~ s1.(heap).(go_left) e0 /\ 
+        s1.(heap).(go_right) e0 /\ 
         (forall e: Z, ~ e = e0 ->
-          s2.(heap).(src) e = s1.(heap).(src) e /\ 
-          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
-          s2.(heap).(go_left) e = s1.(heap).(go_left) e))
+          forall x y, (BinaryTree.step_aux s2.(heap) e x y <->
+                       BinaryTree.step_aux s1.(heap) e x y) /\
+          s2.(heap).(go_right) e = s1.(heap).(go_right) e))
     ).
 
 Definition add_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
@@ -342,14 +339,14 @@ Definition remove_go_left_edge' (v: Z) (a: ExistOrEmpty)
   : StateRelMonad.M state unit :=
     match a with
     | by_exist lc => remove_go_left_edge v lc
-    | by_empty => ret tt
+    | by_empty => (fun s1 _ s2 => (~ exists lc, BinaryTree.step_l s2.(heap) v lc) /\ s2 = s1)
     end.
 
 Definition remove_go_right_edge' (v: Z) (a: ExistOrEmpty)
   : StateRelMonad.M state unit :=
     match a with
     | by_exist rc => remove_go_right_edge v rc
-    | by_empty => ret tt
+    | by_empty => (fun s1 _ s2 => (~ exists rc, BinaryTree.step_r s2.(heap) v rc) /\ s2 = s1)
     end.
 
 Definition add_go_left_edge' (v: Z) (a: ExistOrEmpty)
