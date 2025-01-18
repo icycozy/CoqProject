@@ -334,7 +334,39 @@ Proof.
   split.
   - intros.
     split.
-    
+    + intros.
+      pose proof (classic (e1 = x)).
+      destruct H8.
+      * rewrite H8.
+        
+
+     admit.
+    + admit.
+    + admit.
+  - split.
+    + intros.
+      destruct H6.
+      destruct H6.
+      pose proof (classic(x1 = x)).
+      destruct H7.
+      * rewrite H7 in H6.
+        destruct H6.
+        destruct H6.
+        tauto.
+      * pose proof H5 x1 H7.
+        destruct H6.
+        pose proof H8 v x0.
+        destruct H10.
+        rewrite H11 in H9.
+        apply H10 in H6.
+        destruct H.
+        pose proof edge_l_unique v lc x0 x.
+        assert( BinaryTree.step_aux s1.(heap) x v lc /\ (s1.(heap)).(go_left) x) as H13.
+          tauto.
+        assert( BinaryTree.step_aux s1.(heap) x1 v x0 /\ (s1.(heap)).(go_left) x1) as H12.
+          tauto.
+
+
 Admitted.
 
 
@@ -1034,5 +1066,3 @@ Qed.
 
 (*********************************************************)
 (*********************************************************)
-
-
