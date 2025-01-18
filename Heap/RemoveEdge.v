@@ -5,6 +5,9 @@ Require Import PL.Monad.
 Require Import PL.Monad2.
 Require Import SetsClass.
 Require Import HEAP.Defs.
+Require Import Classical.
+Require Import Coq.Setoids.Setoid.
+Require Import Coq.micromega.Psatz.
 Import SetsNotation
        StateRelMonad
        StateRelMonadOp
@@ -123,7 +126,7 @@ Fact remove_go_left_edge_fact2: forall (v lc: Z),
         (fun _ s => BinaryTree.legal s.(heap) /\ 
                     ~ (exists x, BinaryTree.step_l s.(heap) v x) /\ 
                     ~ (exists x, BinaryTree.step_u s.(heap) lc x)).
-Proof.
+(* Proof. *)
   intros.
   unfold remove_go_left_edge, Hoare; sets_unfold.
   intros.
@@ -364,7 +367,69 @@ Fact remove_go_left_edge_fact3_l:
     Hoare (fun s => ~ exists x, BinaryTree.step_l s.(heap) u x)
           (remove_go_left_edge v a)
           (fun _ s => ~ exists x, BinaryTree.step_l s.(heap) u x).
-Admitted.
+Proof.
+  unfold Hoare, remove_go_left_edge; sets_unfold.
+  intros.
+  destruct H0 as [? [? [? [? [? [? ?]]]]]].
+  unfold BinaryTree.step_l.
+  unfold not.
+  intros.
+  destruct H6.
+  destruct H6 as [e0 ?].
+  pose proof (classic (e0 = x)).
+  destruct H7.
+  + subst e0.
+    destruct H6. destruct H6.
+     tauto.
+  + pose proof H5 e0 H7.
+    unfold BinaryTree.step_l in H.
+
+  assert (exists x e : Z, BinaryTree.step_aux s1.(heap) e u x /\ (s1.(heap)).(go_left) e).
+  * exists x0, e0.
+    split.
+    destruct H6.
+    destruct H6.
+    ** split.
+      {
+        pose proof H2 e0.
+        destruct H6.
+        tauto.
+      } 
+      {
+        pose proof H0 u.
+        tauto.
+      }
+      {
+        pose proof H0 x0.
+        tauto.
+      }
+      {
+        pose proof H5 e0.
+        pose proof H6 H7.
+        rewrite step_src in H10.
+        lia.
+      }
+      {
+        pose proof H5 e0.
+        pose proof H6 H7.
+        rewrite step_dst in H10.
+        lia.
+      }
+    ** destruct H6.
+        destruct H8 as [? [? ?]].
+        rewrite <- H11.
+        tauto.
+  *tauto.
+Qed.
+
+    
+
+
+
+
+
+
+
 
 Fact remove_go_left_edge_fact3_r:
   forall (v: Z) (a: Z) (u: Z),
