@@ -629,3 +629,29 @@ Proof.
         tauto.
 Qed. 
 
+Fact add_go_left_edge_fact3_l:
+  forall (v: Z) (a: Z) (u: Z),
+    Hoare (fun s => ~ u = v /\ ~ exists x, BinaryTree.step_l s.(heap) u x)
+          (add_go_left_edge v a)
+          (fun _ s => ~ exists x, BinaryTree.step_l s.(heap) u x).
+Admitted.
+
+Fact add_go_left_edge_fact3_r:
+  forall (v: Z) (a: Z) (u: Z),
+    Hoare (fun s => ~ u = v /\ ~ exists x, BinaryTree.step_r s.(heap) u x)
+          (add_go_left_edge v a)
+          (fun _ s => ~ exists x, BinaryTree.step_r s.(heap) u x).
+Admitted.
+
+Fact add_go_left_edge_fact4_u:
+  forall (v: Z) (a: Z) (u: ExistOrEmpty),
+    Hoare (fun s => match u with
+                    | by_exist lc => ~ lc = a /\ ~ (exists x : Z, BinaryTree.step_u s.(heap) lc x)
+                    | by_empty => True
+                    end)
+          (add_go_left_edge v a)
+          (fun _ s => match u with
+                      | by_exist lc => ~ (exists x : Z, BinaryTree.step_u s.(heap) lc x)
+                      | by_empty => True
+                      end).
+Admitted.

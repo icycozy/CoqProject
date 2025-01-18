@@ -20,6 +20,18 @@ Local Open Scope sets.
 Local Open Scope Z.
 Local Open Scope monad.
 
+Fact get_fa_fact: forall (v: Z) P, 
+  Hoare P (get_fa v) (fun fa s => P s /\ BinaryTree.step_u s.(heap) v fa).
+Proof.
+  intros.
+  unfold Hoare, get_fa; sets_unfold.
+  intros. destruct H0.
+  split.
+  - rewrite H1. tauto.
+  - rewrite H1. tauto.
+Qed.
+
+
 Fact get_lc_fact: forall (v: Z) P, 
   Hoare P (get_lc v) (fun lc s => P s /\ BinaryTree.step_l s.(heap) v lc).
 Proof.
@@ -136,59 +148,121 @@ Proof.
   }
   cbv beta; intros _.
   eapply Hoare_bind.
-  { apply Hoare_choice.
-    + apply Hoare_test_bind.
-      eapply Hoare_bind.
-      { eapply Hoare_conj5.
-        + eapply Hoare_conseq_pre.
-          2: { apply remove_go_left_edge_fact2. }
-          tauto.
-        + eapply Hoare_conseq_pre.
-          2: { apply (remove_go_left_edge_fact3_l _ _ v). }
-          tauto.
-        + eapply Hoare_conseq_pre.
-          2: { apply (remove_go_left_edge_fact3_r _ _ v). }
-          tauto.
-        + eapply Hoare_conseq_pre.
-          2: { apply (remove_go_left_edge_fact4_u _ _ lc_v). }
-          tauto.
-        + eapply Hoare_conseq_pre.
-          2: { apply (remove_go_left_edge_fact4_u _ _ rc_v). }
-          tauto.
-      }
-      cbv beta; intros _.
-      eapply Hoare_conj7.
-      * eapply Hoare_conseq_pre.
-        2: { apply remove_go_right_edge'_fact2. }
-        tauto.
-      * eapply Hoare_conseq_pre.
-        2: { apply (remove_go_right_edge'_fact3_l _ _ v). }
-        tauto.
-      * eapply Hoare_conseq_pre.
-        2: { apply (remove_go_right_edge'_fact3_r _ _ v). }
-        tauto.
-      * eapply Hoare_conseq_pre.
-        2: { apply (remove_go_right_edge'_fact3_u _ _ v). }
-        tauto.
-      * eapply Hoare_conseq_pre.
-        2: { apply (remove_go_right_edge'_fact4_u _ _ lc_v). }
-        tauto.
-      * eapply Hoare_conseq_pre.
-        2: { apply (remove_go_right_edge'_fact4_u _ _ rc_v). }
-        tauto.
-      * eapply Hoare_conseq_pre.
-        2: {
-          Check remove_go_right_edge'_fact3_l.
-           Check (remove_go_right_edge'_fact3_l _ _ fa).
-           }
-        tauto.
-      
-    }
+  { eapply Hoare_conj5.
+    + eapply Hoare_conseq_pre.
+      2: { apply remove_go_left_edge'_fact2. }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_left_edge'_fact3_l _ _ v). }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_left_edge'_fact3_r _ _ v). }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_left_edge'_fact4_u _ _ lc_v). }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_left_edge'_fact4_u _ _ rc_v). }
+      tauto.
   }
   cbv beta; intros _.
-  
+  eapply Hoare_bind.
+  { eapply Hoare_conj7.
+    + eapply Hoare_conseq_pre.
+      2: { apply remove_go_right_edge'_fact2. }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_right_edge'_fact3_l _ _ v). }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_right_edge'_fact3_r _ _ v). }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_right_edge'_fact4_u _ _ lc_v). }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_right_edge'_fact4_u _ _ rc_v). }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_right_edge'_fact3_l _ _ fa). }
+      tauto.
+    + eapply Hoare_conseq_pre.
+      2: { apply (remove_go_right_edge'_fact4_u _ _ lc_fa). }
+      tauto.
   }
-  
+  cbv beta; intros _.
+  eapply Hoare_bind.
+  { eapply Hoare_choice.
+    2: {
+      eapply Hoare_bind; [apply get_fa_fact| cbv beta; intros gf].
+      eapply Hoare_choice.
+      * apply Hoare_test_bind.
+        eapply Hoare_bind.
+        { 
+          eapply Hoare_conj9.
+          + eapply Hoare_conseq_pre.
+            2: { apply remove_go_left_edge_fact2. }
+            tauto.
+          + eapply Hoare_conseq_pre.
+            2: { apply (remove_go_left_edge_fact3_l _ _ v). }
+            tauto.
+          + eapply Hoare_conseq_pre.
+            2: { apply (remove_go_left_edge_fact3_r _ _ v). }
+            tauto.
+          + eapply Hoare_conseq_pre.
+            2: { apply (remove_go_left_edge_fact4_u _ _ lc_v). }
+            tauto.
+          + eapply Hoare_conseq_pre.
+            2: { apply (remove_go_left_edge_fact4_u _ _ rc_v). }
+            tauto.
+          + eapply Hoare_conseq_pre.
+            2: { apply (remove_go_left_edge_fact3_l _ _ fa). }
+            tauto.
+          + eapply Hoare_conseq_pre.
+            2: { apply (remove_go_left_edge_fact3_r _ _ fa). }
+            tauto.
+          + eapply Hoare_conseq_pre.
+            2: { apply (remove_go_left_edge_fact4_u _ _ lc_fa). }
+            tauto.
+          + eapply Hoare_conseq_pre.
+            2: { apply (remove_go_left_edge_fact4_u _ _ rc_fa). }
+            tauto.
+        }
+        cbv beta; intros _.
+        eapply Hoare_conj9.
+        + eapply Hoare_conseq_pre.
+          2: { apply add_go_left_edge_fact2. }
+          admit.
+        + eapply Hoare_conseq_pre.
+          2: { apply (add_go_left_edge_fact3_l _ _ v). }
+          admit.
+        + eapply Hoare_conseq_pre.
+          2: { apply (add_go_left_edge_fact3_r _ _ v). }
+          admit.
+        + eapply Hoare_conseq_pre.
+          2: { apply (add_go_left_edge_fact4_u _ _ lc_v). }
+          admit.
+        + eapply Hoare_conseq_pre.
+          2: { apply (add_go_left_edge_fact4_u _ _ rc_v). }
+          admit.
+        + eapply Hoare_conseq_pre.
+          2: { apply (add_go_left_edge_fact3_l _ _ fa). }
+          admit.
+        + eapply Hoare_conseq_pre.
+          2: { apply (add_go_left_edge_fact3_l _ _ fa). }
+          admit.
+        + eapply Hoare_conseq_pre.
+          2: { apply (add_go_left_edge_fact4_u _ _ lc_fa). }
+          admit. 
+        + eapply Hoare_conseq_pre.
+          2: { apply (add_go_left_edge_fact4_u _ _ rc_fa). }
+          admit.
+      * cbv beta.
+  }
+    1: {
+
+    }
+    
 
 Admitted.
   (* 
