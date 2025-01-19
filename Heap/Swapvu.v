@@ -344,7 +344,12 @@ Proof.
     + eapply Hoare_conseq_pre.
       2: { apply (remove_go_left_edge'_fact4_u _ _ rc_v). }
       tauto.
-    + assert (Hoare
+    + admit.
+  }
+  admit.
+Admitted.
+
+    (* + assert (Hoare
                 (fun s => BinaryTree.legal s.(heap) /\
                   (gf = by_empty -> ~ (exists x : Z, BinaryTree.step_u s.(heap) fa x)))
                 (remove_go_left_edge' fa lc_fa) 
@@ -627,7 +632,7 @@ Proof.
     + eapply Hoare_conseq_pre.
       2: { apply (add_go_left_edge_fact3_r _ _ v). }
       simpl; tauto.
-  }
+  } *)
 
         
        

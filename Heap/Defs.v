@@ -69,14 +69,14 @@ Definition step_u {V E: Type} (bt: BinaryTree V E) (x y: V): Prop :=
 Record legal {V E: Type} (bt: BinaryTree V E): Prop :=
 {
   edge_l_unique: forall x y1 y2, 
-                  exists e1, step_aux bt e1 x y1 /\ bt.(go_left) e1 ->
-                  exists e2, step_aux bt e2 x y2 /\ bt.(go_left) e2 -> e1 = e2;
+                  forall e1, step_aux bt e1 x y1 /\ bt.(go_left) e1 ->
+                  forall e2, step_aux bt e2 x y2 /\ bt.(go_left) e2 -> e1 = e2;
   edge_r_unique: forall x y1 y2, 
-                 exists e1, step_aux bt e1 x y1 /\ bt.(go_right) e1 ->
-                 exists e2, step_aux bt e2 x y2 /\ bt.(go_right) e2 -> e1 = e2;
+                 forall e1, step_aux bt e1 x y1 /\ bt.(go_right) e1 ->
+                 forall e2, step_aux bt e2 x y2 /\ bt.(go_right) e2 -> e1 = e2;
   edge_u_unique: forall x y1 y2, 
-                 exists e1, step_aux bt e1 y1 x ->
-                 exists e2, step_aux bt e2 y2 x -> e1 = e2;
+                 forall e1, step_aux bt e1 y1 x ->
+                 forall e2, step_aux bt e2 y2 x -> e1 = e2;
 }.
 
 Record legal' {V E: Type} (bt: BinaryTree V E): Prop :=
@@ -468,9 +468,9 @@ Definition swap_v_u (v fa: Z): StateRelMonad.M state unit :=
       add_go_right_edge' v rc_fa)
     (test (fun s => dir_fa_v = 1);;
       add_go_left_edge' v lc_fa;;
-      add_go_right_edge v fa)).
+      add_go_right_edge v fa));;
   add_go_left_edge' fa lc_v;;
-  add_go_right_edge' fa rc_v;;
+  add_go_right_edge' fa rc_v.
   
 
 
