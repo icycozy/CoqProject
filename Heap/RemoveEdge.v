@@ -338,9 +338,20 @@ Proof.
       pose proof (classic (e1 = x)).
       destruct H8.
       * rewrite H8.
-        
-
-     admit.
+        pose proof (classic (e2 = x)).
+        destruct H9.
+        ** rewrite H9.
+            tauto.
+        ** rewrite H8 in H6.
+          destruct H.
+          pose proof H5 e2 H9 x0 y2.
+          destruct H.
+          destruct H.
+          destruct H7.
+          rewrite H10 in H12.
+          apply H in H7.
+          pose proof edge_l_unique x0 
+      admit.
     + admit.
     + admit.
   - split.
