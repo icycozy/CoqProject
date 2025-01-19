@@ -462,15 +462,16 @@ Definition swap_v_u (v fa: Z): StateRelMonad.M state unit :=
         add_go_right_edge fa_fa v)
   | by_empty => (fun s1 _ s2 => s2 = s1)
   end;;
+  add_go_left_edge' fa lc_v;;
+  add_go_right_edge' fa rc_v;;
   (choice
     (test (fun s => dir_fa_v = 0);;
-      add_go_left_edge v fa;;
-      add_go_right_edge' v rc_fa)
+      add_go_right_edge' v rc_fa;;
+      add_go_left_edge v fa)
     (test (fun s => dir_fa_v = 1);;
       add_go_left_edge' v lc_fa;;
-      add_go_right_edge v fa));;
-  add_go_left_edge' fa lc_v;;
-  add_go_right_edge' fa rc_v.
+      add_go_right_edge v fa)).
+  
   
 
 

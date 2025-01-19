@@ -344,12 +344,7 @@ Proof.
     + eapply Hoare_conseq_pre.
       2: { apply (remove_go_left_edge'_fact4_u _ _ rc_v). }
       tauto.
-    + admit.
-  }
-  admit.
-Admitted.
-
-    (* + assert (Hoare
+    + assert (Hoare
                 (fun s => BinaryTree.legal s.(heap) /\
                   (gf = by_empty -> ~ (exists x : Z, BinaryTree.step_u s.(heap) fa x)))
                 (remove_go_left_edge' fa lc_fa) 
@@ -445,8 +440,8 @@ Admitted.
             2: { apply (remove_go_left_edge_fact4_u _ _ rc_fa). }
             tauto.  
         }
-        cbv beta; intros _.
-        eapply Hoare_conj10.
+        cbv beta; intros _. 
+        eapply Hoare_conj9.
         + eapply Hoare_conseq_pre.
           2: { apply add_go_left_edge_fact2. }
           intros.
@@ -483,22 +478,39 @@ Admitted.
         + eapply Hoare_conseq_pre.
           2: { apply (add_go_left_edge_fact3_u _ _ fa). }
           simpl; tauto.
-        + assert (Hoare
-                (fun s => BinaryTree.legal s.(heap) /\
-                  (gf = by_empty -> ~ (exists x : Z, BinaryTree.step_u s.(heap) fa x)))
-                (add_go_left_edge' fa rc_fa) 
-                (fun _ s => (dir_fa_v = 0 -> ~ (exists x : Z, BinaryTree.step_u s.(heap) fa x)))).
-      {
-        pose proof remove_go_right_edge'_fact3_u fa rc_fa fa.
-        revert H0.
-        unfold Hoare; sets_unfold; intros.
-        destruct H1.
-        pose proof H4 H3.
-        pose proof H0 _ _ _ H5 H2.
-        tauto.
-
-
-
+       + assert (Hoare
+                  (fun s => BinaryTree.legal s.(heap) /\
+                            match lc_fa with
+                            | by_exist u => ~ (exists x : Z, BinaryTree.step_u s.(heap) u x)
+                            | by_empty => True
+                            end /\
+                            match rc_fa with
+                            | by_exist u => ~ (exists x : Z, BinaryTree.step_u s.(heap) u x)
+                            | by_empty => True
+                            end)
+                  (add_go_left_edge a v)
+                  (fun _ s => (dir_fa_v = 0 -> 
+                                match lc_fa with
+                                | by_exist u => ~ (exists x : Z, BinaryTree.step_u s.(heap) u x)
+                                | by_empty => True
+                                end) /\
+                              (dir_fa_v = 1 ->
+                                match rc_fa with
+                                | by_exist u => ~ (exists x : Z, BinaryTree.step_u s.(heap) u x)
+                                | by_empty => True
+                                end))).
+          { admit. }
+Admitted.
+          (* {
+            pose proof add_go_left_edge_fact4_u a v lc_fa.
+            pose proof add_go_left_edge_fact4_u a v rc_fa.
+            revert H0. revert H1.
+            unfold Hoare; sets_unfold; intros.
+            destruct H as [? _].
+            destruct H.
+            - split; intros.
+              *      
+          }
       - cbv beta. 
         apply Hoare_test_bind.
           eapply Hoare_bind.
