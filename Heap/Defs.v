@@ -68,9 +68,6 @@ Definition step_u {V E: Type} (bt: BinaryTree V E) (x y: V): Prop :=
 
 Record legal {V E: Type} (bt: BinaryTree V E): Prop :=
 {
-  step_l_unique: forall x y1 y2, step_l bt x y1 -> step_l bt x y2 -> y1 = y2;
-  step_r_unique: forall x y1 y2, step_r bt x y1 -> step_r bt x y2 -> y1 = y2;
-  step_u_unique: forall x y1 y2, step_u bt x y1 -> step_u bt x y2 -> y1 = y2;
   edge_l_unique: forall x y1 y2, 
                   exists e1, step_aux bt e1 x y1 /\ bt.(go_left) e1 ->
                   exists e2, step_aux bt e2 x y2 /\ bt.(go_left) e2 -> e1 = e2;
@@ -81,6 +78,17 @@ Record legal {V E: Type} (bt: BinaryTree V E): Prop :=
                  exists e1, step_aux bt e1 y1 x ->
                  exists e2, step_aux bt e2 y2 x -> e1 = e2;
 }.
+
+Record legal' {V E: Type} (bt: BinaryTree V E): Prop :=
+{
+  step_l_unique: forall x y1 y2, step_l bt x y1 -> step_l bt x y2 -> y1 = y2;
+  step_r_unique: forall x y1 y2, step_r bt x y1 -> step_r bt x y2 -> y1 = y2;
+  step_u_unique: forall x y1 y2, step_u bt x y1 -> step_u bt x y2 -> y1 = y2;
+}.
+
+Lemma legal2legal': forall (V E: Type) (bt: BinaryTree V E),
+  legal bt -> legal' bt.
+Admitted.
 
 End BinaryTree.
 
@@ -180,12 +188,23 @@ Record Heap_broken_down (h: BinTree Z Z) (v: Z): Prop :=
 Definition Abs (h: BinTree Z Z) (X: Z -> Prop): Prop :=
   X == h.(vvalid).
 
+Definition is_minimum (val: Z) (V: Z -> Prop): Prop :=
+    forall x, V x -> x >= val.
+
 Record state: Type :=
 {
   heap: BinTree Z Z;
 }.
 
 Notation "s '.(heap)'" := (heap s) (at level 1).
+
+
+(*********************************************************)
+(**                                                      *)
+(** test                                                 *)
+(**                                                      *)
+(*********************************************************)
+
 
 Definition test_lc_empty (v: Z): StateRelMonad.M state unit :=
   test (fun s => s.(heap).(vvalid) v /\
@@ -223,9 +242,14 @@ Definition test_empty: StateRelMonad.M state unit :=
 Definition test_not_empty: StateRelMonad.M state unit :=
   test (fun s => exists x, s.(heap).(vvalid) x).
 
-Definition any_valid_v: StateRelMonad.M state Z :=
-  fun s1 v s2 =>
-    s1.(heap).(vvalid) v /\ s2 = s1. 
+
+(*********************************************************)
+(**                                                      *)
+(** get_lc /rc /fa                                       *)
+(** get_dir /minimum                                     *)
+(**                                                      *)
+(*********************************************************)
+
 
 Definition get_fa (v: Z): StateRelMonad.M state Z :=
   fun s1 fa s2 =>
@@ -238,20 +262,6 @@ Definition get_lc (v: Z): StateRelMonad.M state Z :=
 Definition get_rc (v: Z) : StateRelMonad.M state Z :=
   fun s1 rc s2 =>
     BinaryTree.step_r s1.(heap) v rc /\ s2 = s1.
-
-Definition get_minimum: StateRelMonad.M state Z :=
-  fun s1 rt s2 =>
-    s1.(heap).(vvalid) rt /\
-    forall v, s1.(heap).(vvalid) v -> v >= rt /\
-    s2 = s1.
-
-
-
-(*********************************************************)
-(**                                                      *)
-(** swap_v_u                                             *)
-(**                                                      *)
-(*********************************************************)
 
 Inductive ExistOrEmpty: Type :=
 | by_exist (a: Z)
@@ -278,6 +288,34 @@ Definition get_fa' (v: Z): StateRelMonad.M state ExistOrEmpty :=
     (fa <- get_fa v;;
     ret (by_exist fa)).
 
+Definition get_dir (fa v: Z): StateRelMonad.M state Z :=
+  fun s1 dir s2 =>
+    (
+      (dir = 0 /\ BinaryTree.step_l s2.(heap) fa v /\ s2 = s1) \/
+      (dir = 1 /\ BinaryTree.step_r s2.(heap) fa v /\ s2 = s1)
+    ).
+
+Definition get_dir' (fa: ExistOrEmpty) (v: Z):
+  StateRelMonad.M state Z :=
+    match fa with
+    | by_exist fa => get_dir fa v
+    | by_empty => fun s1 dir s2 => (dir = -1 /\ s2 = s1)
+    end.
+
+Definition get_minimum: StateRelMonad.M state Z :=
+  fun s1 rt s2 =>
+    s1.(heap).(vvalid) rt /\
+    forall v, s1.(heap).(vvalid) v -> v >= rt /\
+    s2 = s1.
+
+
+(*********************************************************)
+(**                                                      *)
+(** add /remove edge                                     *)
+(**                                                      *)
+(*********************************************************)
+
+
 Definition remove_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
   fun s1 _ s2 =>
     (
@@ -288,8 +326,8 @@ Definition remove_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
         BinaryTree.step_aux s1.(heap) e0 v lc /\
         s1.(heap).(go_left) e0 /\ 
         (forall e: Z, ~ e = e0 ->
-          s2.(heap).(src) e = s1.(heap).(src) e /\ 
-          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
+          forall x y, (BinaryTree.step_aux s2.(heap) e x y <->
+                       BinaryTree.step_aux s1.(heap) e x y) /\
           s2.(heap).(go_left) e = s1.(heap).(go_left) e))
     ).
 
@@ -301,11 +339,11 @@ Definition remove_go_right_edge (v rc: Z): StateRelMonad.M state unit :=
         ~ s2.(heap).(evalid) e0 /\
         s2.(heap).(evalid) ∪ Sets.singleton e0 == s1.(heap).(evalid) /\
         BinaryTree.step_aux s1.(heap) e0 v rc /\
-        ~ s1.(heap).(go_left) e0 /\ 
+        s1.(heap).(go_right) e0 /\
         (forall e: Z, ~ e = e0 ->
-          s2.(heap).(src) e = s1.(heap).(src) e /\ 
-          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
-          s2.(heap).(go_left) e = s1.(heap).(go_left) e))
+          forall x y, (BinaryTree.step_aux s2.(heap) e x y <->
+                       BinaryTree.step_aux s1.(heap) e x y) /\ 
+          s2.(heap).(go_right) e = s1.(heap).(go_right) e))
     ).
 
 Definition add_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
@@ -318,8 +356,8 @@ Definition add_go_left_edge (v lc: Z): StateRelMonad.M state unit :=
         BinaryTree.step_aux s2.(heap) e0 v lc /\
         s2.(heap).(go_left) e0 /\ 
         (forall e: Z, ~ e = e0 ->
-          s2.(heap).(src) e = s1.(heap).(src) e /\ 
-          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
+          forall x y, (BinaryTree.step_aux s2.(heap) e x y <->
+                       BinaryTree.step_aux s1.(heap) e x y) /\ 
           s2.(heap).(go_left) e = s1.(heap).(go_left) e))
     ).
 
@@ -331,87 +369,118 @@ Definition add_go_right_edge (v rc: Z): StateRelMonad.M state unit :=
         ~ s1.(heap).(evalid) e0 /\
         s2.(heap).(evalid) == s1.(heap).(evalid) ∪ Sets.singleton e0 /\
         BinaryTree.step_aux s2.(heap) e0 v rc /\
-        ~ s2.(heap).(go_left) e0 /\ 
+        s2.(heap).(go_right) e0 /\
         (forall e: Z, ~ e = e0 ->
-          s2.(heap).(src) e = s1.(heap).(src) e /\ 
-          s2.(heap).(dst) e = s1.(heap).(dst) e /\ 
-          s2.(heap).(go_left) e = s1.(heap).(go_left) e))
+          forall x y, (BinaryTree.step_aux s2.(heap) e x y <->
+                       BinaryTree.step_aux s1.(heap) e x y) /\ 
+          s2.(heap).(go_right) e = s1.(heap).(go_right) e))
     ).
 
 Definition remove_go_left_edge' (v: Z) (a: ExistOrEmpty)
   : StateRelMonad.M state unit :=
     match a with
     | by_exist lc => remove_go_left_edge v lc
-    | by_empty => ret tt
+    | by_empty => (fun s1 _ s2 => s2 = s1)
     end.
 
 Definition remove_go_right_edge' (v: Z) (a: ExistOrEmpty)
   : StateRelMonad.M state unit :=
     match a with
     | by_exist rc => remove_go_right_edge v rc
-    | by_empty => ret tt
+    | by_empty => (fun s1 _ s2 => s2 = s1)
     end.
 
 Definition add_go_left_edge' (v: Z) (a: ExistOrEmpty)
   : StateRelMonad.M state unit :=
     match a with
     | by_exist lc => add_go_left_edge v lc
-    | by_empty => ret tt
+    | by_empty => (fun s1 _ s2 => s2 = s1)
     end.
 
 Definition add_go_right_edge' (v: Z) (a: ExistOrEmpty)
   : StateRelMonad.M state unit :=
     match a with
     | by_exist rc => add_go_right_edge v rc
-    | by_empty => ret tt
+    | by_empty => (fun s1 _ s2 => s2 = s1)
     end.  
 
-Definition get_dir (fa v: Z): StateRelMonad.M state Z :=
-  fun s1 dir s2 =>
-    (
-      (dir = 0 /\ BinaryTree.step_l s2.(heap) fa v /\ s2 = s1) \/
-      (dir = 1 /\ BinaryTree.step_r s2.(heap) fa v /\ s2 = s1)
-    ).
+Definition remove_go_left_edge'' (a: ExistOrEmpty) (lc: Z) 
+  : StateRelMonad.M state unit :=
+    match a with
+    | by_exist v => remove_go_left_edge v lc
+    | by_empty => (fun s1 _ s2 => s2 = s1)
+    end.
+
+Definition remove_go_right_edge'' (a: ExistOrEmpty) (rc: Z) 
+  : StateRelMonad.M state unit :=
+    match a with
+    | by_exist v => remove_go_right_edge v rc
+    | by_empty => (fun s1 _ s2 => s2 = s1)
+    end.
+
+Definition add_go_left_edge'' (a: ExistOrEmpty) (lc: Z) 
+  : StateRelMonad.M state unit :=
+    match a with
+    | by_exist v => add_go_left_edge v lc
+    | by_empty => (fun s1 _ s2 => s2 = s1)
+    end.
+
+Definition add_go_right_edge'' (a: ExistOrEmpty) (rc: Z)
+  : StateRelMonad.M state unit :=
+    match a with
+    | by_exist v => add_go_right_edge v rc
+    | by_empty => (fun s1 _ s2 => s2 = s1)
+    end.
+
+
+(*********************************************************)
+(**                                                      *)
+(** swap_v_u                                             *)
+(**                                                      *)
+(*********************************************************)
+
 
 Definition swap_v_u (v fa: Z): StateRelMonad.M state unit :=
   lc_v <- get_lc' v;;
   rc_v <- get_rc' v;;
   lc_fa <- get_lc' fa;;
   rc_fa <- get_rc' fa;;
+  gf <- get_fa' fa;;
   dir_fa_v <- get_dir fa v;;
   remove_go_left_edge' v lc_v;;
   remove_go_right_edge' v rc_v;;
   remove_go_left_edge' fa lc_fa;;
   remove_go_right_edge' fa rc_fa;;
-  (choice
-    (test_is_root fa)
-    (gf <- get_fa fa;;
-      choice
-        (test (fun s => BinaryTree.step_l s.(heap) gf fa);;
-          remove_go_left_edge gf fa;;
-          add_go_left_edge gf v)
-        (test (fun s => BinaryTree.step_r s.(heap) gf fa);;
-          remove_go_right_edge gf fa;;
-          add_go_right_edge gf v)));;
+  match gf with 
+  | by_exist fa_fa => 
+    choice
+      (test (fun s => BinaryTree.step_l s.(heap) fa_fa fa);;
+        remove_go_left_edge fa_fa fa;;
+        add_go_left_edge fa_fa v)
+      (test (fun s => BinaryTree.step_l s.(heap) fa_fa fa);;
+        remove_go_right_edge fa_fa fa;;
+        add_go_right_edge fa_fa v)
+  | by_empty => (fun s1 _ s2 => s2 = s1)
+  end;;
   (choice
     (test (fun s => dir_fa_v = 0);;
       add_go_left_edge v fa;;
       add_go_right_edge' v rc_fa)
     (test (fun s => dir_fa_v = 1);;
       add_go_left_edge' v lc_fa;;
-      add_go_right_edge v fa));;
+      add_go_right_edge v fa)).
   add_go_left_edge' fa lc_v;;
-  add_go_right_edge' fa rc_v.
+  add_go_right_edge' fa rc_v;;
+  
 
 
 (*********************************************************)
 (**                                                      *)
-(** insert                                               *)
+(** move_up &insert                                      *)
 (**                                                      *)
 (*********************************************************)
 
 
-(* 从v开始向上调整 *)
 
 Definition body_move_up (v: Z):
   StateRelMonad.M state (ContinueOrBreak Z unit) :=
@@ -445,7 +514,7 @@ Definition insert (val: Z): StateRelMonad.M state unit :=
 
 (*********************************************************)
 (**                                                      *)
-(** delete                                               *)
+(** move_down &delete                                    *)
 (**                                                      *)
 (*********************************************************)
 
@@ -523,6 +592,3 @@ Definition delete: StateRelMonad.M state Z :=
         v <- ext_delete_node rt;;
         move_down v;;
         ret rt).
-
-Definition is_minimum (val: Z) (V: Z -> Prop): Prop :=
-    forall x, V x -> x >= val.

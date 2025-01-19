@@ -111,7 +111,8 @@ Proof.
         tauto.
       * destruct H5 as [rc' [? ?]].
         assert (rc = rc').
-        { pose proof BinaryTree.step_r_unique s.(heap) H4 v rc rc' H6 H5. tauto. }
+        { pose proof BinaryTree.legal2legal' _ _ s.(heap) H4.
+          pose proof BinaryTree.step_r_unique s.(heap) H8 v rc rc' H6 H5. tauto. }
         subst rc'.
         pose proof (L1 v rc H H7). tauto.
     + apply Hoare_test_bind.
@@ -135,7 +136,8 @@ Proof.
       destruct down_v_lc_rc.
       * destruct H5 as [lc' [? ?]].
         assert (lc = lc').
-        { pose proof BinaryTree.step_l_unique s.(heap) H4 v lc lc' H6 H5. tauto. }
+        { pose proof BinaryTree.legal2legal' _ _ s.(heap) H4.
+          pose proof BinaryTree.step_l_unique s.(heap) H8 v lc lc' H6 H5. tauto. }
         subst lc'.
         pose proof (L1 v lc H H7). tauto.
       * destruct H5 as [rc [? ?]].
@@ -166,12 +168,14 @@ Proof.
         destruct down_v_lc_rc.
         -- destruct H4 as [lc' [? ?]].
            assert (lc = lc').
-           { pose proof BinaryTree.step_l_unique s.(heap) H3 v lc lc' H5 H4. tauto. }
+           { pose proof BinaryTree.legal2legal' _ _ s.(heap) H3. 
+             pose proof BinaryTree.step_l_unique s.(heap) H8 v lc lc' H5 H4. tauto. }
            subst lc'.
            pose proof (L1 v lc H H7). tauto.
         -- destruct H4 as [rc' [? ?]].
            assert (rc = rc').
-           { pose proof BinaryTree.step_r_unique s.(heap) H3 v rc rc' H6 H4. tauto. }
+           { pose proof BinaryTree.legal2legal' _ _ s.(heap) H3.
+             pose proof BinaryTree.step_r_unique s.(heap) H8 v rc rc' H6 H4. tauto. }
            subst rc'.
            assert (v < rc).
            {pose proof (L2 v lc rc H H0). tauto. }
@@ -195,7 +199,8 @@ Proof.
         destruct down_v_lc_rc.
         -- destruct H4 as [lc' [? ?]].
            assert (lc = lc').
-           { pose proof BinaryTree.step_l_unique s.(heap) H3 v lc lc' H5 H4. tauto. }
+           { pose proof BinaryTree.legal2legal' _ _ s.(heap) H3.
+             pose proof BinaryTree.step_l_unique s.(heap) H8 v lc lc' H5 H4. tauto. }
            subst lc'.
            assert (rc < lc).
            {lia. }
@@ -204,7 +209,8 @@ Proof.
            pose proof (L1 v lc H9 H7). tauto.
         -- destruct H4 as [rc' [? ?]].
            assert (rc = rc').
-           { pose proof BinaryTree.step_r_unique s.(heap) H3 v rc rc' H6 H4. tauto. }
+           { pose proof BinaryTree.legal2legal' _ _ s.(heap) H3.
+            pose proof BinaryTree.step_r_unique s.(heap) H8 v rc rc' H6 H4. tauto. }
            subst rc'.
            pose proof (L1 v rc H H7). tauto.
       * apply Hoare_test_bind.

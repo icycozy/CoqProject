@@ -38,85 +38,6 @@ Qed.
 
 (* 有些条件多余 *)
 
-Lemma L2: forall (x y: Z),
-  ~ x <> y -> x = y.
-Proof.
-  intros. tauto.
-Qed.
-
-Lemma L3: forall (bt: BinTree Z Z) (x y1 y2: Z), 
-  BinaryTree.legal bt ->
-    BinaryTree.step_l bt x y1 ->
-      BinaryTree.step_l bt x y2 ->
-        y1 = y2.
-Proof.
-  intros.
-  destruct H.
-  pose proof step_l_unique x y1 y2 H0 H1.
-  tauto.
-Qed.
-
-Lemma L3': forall (bt: BinTree Z Z) (x y1 y2: Z), 
-  BinaryTree.legal bt ->
-    BinaryTree.step_r bt x y1 ->
-      BinaryTree.step_r bt x y2 ->
-        y1 = y2.
-Proof.
-  intros.
-  destruct H.
-  pose proof step_r_unique x y1 y2 H0 H1.
-  tauto.
-Qed.
-
-Lemma L3'': forall (bt: BinTree Z Z) (x y1 y2: Z), 
-  BinaryTree.legal bt ->
-    BinaryTree.step_u bt x y1 ->
-      BinaryTree.step_u bt x y2 ->
-        y1 = y2.
-Proof.
-  intros.
-  destruct H.
-  pose proof step_u_unique x y1 y2 H0 H1.
-  tauto.
-Qed.
-
-Lemma L4: forall (x y: Z),
-  x < y -> x = y -> False.
-Proof. lia. Qed.
-
-Lemma L5: forall (bt: BinTree Z Z) (v fa: Z), 
-  BinaryTree.step_u bt v fa ->
-    BinaryTree.step_l bt v fa ->
-      False.
-Admitted.
-
-Lemma L5': forall (bt: BinTree Z Z) (v fa: Z), 
-  BinaryTree.step_u bt v fa ->
-    BinaryTree.step_r bt v fa ->
-      False.
-Admitted.
-
-Lemma L5'': forall (bt: BinTree Z Z) (v fa: Z), 
-  BinaryTree.step_u bt v fa ->
-    BinaryTree.step_r bt v fa ->
-      False.
-Admitted.
-
-Lemma L6: forall (bt: BinTree Z Z) (x y: Z), 
-  BinaryTree.step_l bt x y ->
-    ~ x = y.
-Admitted.
-
-Lemma L6': forall (bt: BinTree Z Z) (x y: Z), 
-  BinaryTree.step_r bt x y ->
-    ~ x = y.
-Admitted.
-
-Lemma L6'': forall (bt: BinTree Z Z) (x y: Z), 
-  BinaryTree.step_u bt x y ->
-    ~ x = y.
-Admitted.
-
 Fact swap_v_fa_fact1: forall (v fa: Z) (V: Z -> Prop), 
   Hoare
     (fun s => v < fa /\
@@ -132,9 +53,6 @@ Fact swap_v_fa_fact1: forall (v fa: Z) (V: Z -> Prop),
                 (Heap s.(heap) \/ Heap_broken_up s.(heap) v)).
 Admitted.
   
-
-
-
 
 Lemma L1: forall (x y: Z),
   x < y -> x > y -> False.
@@ -181,7 +99,8 @@ Proof.
       destruct H3.
       destruct up_fa_v_lc_rc as [fa' [? [? _]]].
       assert (fa = fa').
-      { pose proof (BinaryTree.step_u_unique s.(heap) H2 v fa fa' H4 H3). tauto. }
+      { pose proof BinaryTree.legal2legal' _ _ s.(heap) H2.
+         pose proof (BinaryTree.step_u_unique s.(heap) H6 v fa fa' H4 H3). tauto. }
       subst fa'.
       pose proof (L1 v fa H5 H). tauto.
     + apply Hoare_test_bind.
