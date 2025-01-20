@@ -1,0 +1,232 @@
+[33mcommit 3e5666fe6496cd2b19eac862840d5b0c7cc25578[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Mon Jan 20 00:16:11 2025 +0800
+
+    last commit
+
+[33mcommit f74c129faa4aaa0787465c04dfb2a34cadf1f185[m
+Merge: 7f13e3a a1fba98
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Sun Jan 19 15:17:42 2025 +0800
+
+    Merge branch 'main' of https://github.com/icycozy/CoqProject into main
+
+[33mcommit 7f13e3aa34ba3eb2cb35353204752496dae8120b[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Sun Jan 19 14:04:37 2025 +0800
+
+    7
+
+[33mcommit a1fba985b915f9398e938b345ffcb3334b04eec3[m
+Author: zhuyuxing <572506664@qq.com>
+Date:   Sun Jan 19 12:41:59 2025 +0800
+
+    add edge half finished
+
+[33mcommit 55c656044169e40449047848ef9d158f4078b06d[m
+Author: zhuyuxing <572506664@qq.com>
+Date:   Sun Jan 19 11:05:02 2025 +0800
+
+    remove legal mostly completed
+
+[33mcommit 1c9299db2da9b93fc93ad7cac49e2a7857b7df85[m
+Author: zhuyuxing <572506664@qq.com>
+Date:   Sun Jan 19 10:01:20 2025 +0800
+
+    remove half finished
+
+[33mcommit 072d8a02f79afeef9f293b8c3d8304cc3e39f53e[m[33m ([m[1;31mmyorigin/main[m[33m)[m
+Author: zhuyuxing <572506664@qq.com>
+Date:   Sat Jan 18 21:55:40 2025 +0800
+
+    remove legal half finished
+
+[33mcommit b53579678c7f39c1795663077f265e72126d37c9[m
+Author: zhuyuxing <572506664@qq.com>
+Date:   Sat Jan 18 15:59:50 2025 +0800
+
+    removeedge
+
+[33mcommit 2de9c9ffbd6ba45f1fcc640ad11da06a3ccd1574[m
+Author: zhuyuxing <572506664@qq.com>
+Date:   Sat Jan 18 11:39:00 2025 +0800
+
+    remove_go_left_edge_fact3_l
+
+[33mcommit c6139f6a1cdd3bbb2c2f1b28d8283a749befcbd2[m
+Merge: 7bcb775 9ff55fe
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Sat Jan 18 10:43:46 2025 +0800
+
+    Merge branch 'main' of https://github.com/icycozy/CoqProject into main
+
+[33mcommit 7bcb7754b8c2854cbebc630166fae13d65e7d567[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Sat Jan 18 10:42:33 2025 +0800
+
+    6
+
+[33mcommit 9ff55fe261db8cf0942fcd9285d0989e8e7d31ab[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Fri Jan 17 23:33:50 2025 +0800
+
+    2333
+
+[33mcommit 37a705d2da271d3d53bdd267527f2e6d19414d56[m
+Merge: 271cc7d acd2e1e
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Fri Jan 17 20:00:14 2025 +0800
+
+    Merge branch 'main' of https://github.com/icycozy/CoqProject into main
+
+[33mcommit 271cc7db433eed3ff51bdb0539d1d04c0c585a78[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Fri Jan 17 19:59:49 2025 +0800
+
+    5
+
+[33mcommit acd2e1e5ffa1bd87e4651397aa161678256f3fc8[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Fri Jan 17 19:37:16 2025 +0800
+
+    19.37
+
+[33mcommit a9e08426ac8d6e4e9c6b02a897777a6222de5f4b[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Fri Jan 17 17:57:39 2025 +0800
+
+    4
+
+[33mcommit 7c2ad5a6f6adff69a9e897b8f422ceefed7e3586[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Fri Jan 17 14:26:04 2025 +0800
+
+    3
+
+[33mcommit 88c7f16110677aaef76dc3b7b1180e66445a852c[m
+Merge: ae7c342 2d0d5ad
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Fri Jan 17 11:57:56 2025 +0800
+
+    Merge branch 'main' of https://github.com/icycozy/CoqProject into main
+
+[33mcommit ae7c3428f74685b6455c42e499f8a93fef45e2bc[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Fri Jan 17 11:53:43 2025 +0800
+
+    2
+
+[33mcommit 2d0d5ad7e67e5175c25f8f15f6bd6472bd193fdb[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Fri Jan 17 00:39:56 2025 +0800
+
+    1/17
+
+[33mcommit b67a51445f90fee723050ec7aa8b29d642c190a3[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Thu Jan 16 19:53:20 2025 +0800
+
+    1
+
+[33mcommit dc63b81251c201a9e9c96ee21ec159d8de303c0c[m
+Merge: dc0e337 ff34952
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Thu Jan 16 16:41:26 2025 +0800
+
+    Merge branch 'main' of https://github.com/icycozy/CoqProject into main
+
+[33mcommit dc0e337eb5346d6027f594da313b61151a2bce5c[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Thu Jan 16 16:40:39 2025 +0800
+
+    ...(MoveUp.v)
+
+[33mcommit ff34952f086b65c4673314d4455ef172deb75ca9[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Thu Jan 16 16:37:36 2025 +0800
+
+    insert_done
+
+[33mcommit a132c19611796e745989f5574a236759d26fc75e[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Wed Jan 15 19:13:35 2025 +0800
+
+    modify insert&delete(Defs.v)
+
+[33mcommit 9c35859cbb78725adb795b02d1e3500271353b9e[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Fri Jan 3 11:08:15 2025 +0800
+
+    1/3
+
+[33mcommit 73eb9b9412945cec2479cc2c8c2fa9655a31c721[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Thu Jan 2 22:24:39 2025 +0800
+
+    insert almost done, lemma to be proved, move_up_full modified
+
+[33mcommit 2a6e0be8e03a401e80b0a9133e3f19f479d517df[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Thu Jan 2 18:35:35 2025 +0800
+
+    1/2
+
+[33mcommit 5ef68c87a5af596e1066ff5a8d120e51350a904b[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Tue Dec 31 16:48:15 2024 +0800
+
+    add demos
+
+[33mcommit 4479ae50143ee5608dd0a2eee0713bd86fd4d7e3[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Sun Dec 29 21:55:07 2024 +0800
+
+    boxfish-1
+
+[33mcommit 9c3bc9e9821ffb00fd6d2b9f55d34d585eff7e2e[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Sun Dec 29 21:47:55 2024 +0800
+
+    12/29
+
+[33mcommit bc43604e3b1bf69886a30f7df2d88a47019699f6[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Fri Dec 27 19:37:42 2024 +0800
+
+    add props&ops for task3
+
+[33mcommit 76ad9c4ba2c8acfab25190e75326e392bfd24cf3[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Thu Dec 26 23:24:31 2024 +0800
+
+    add more details(Heap.v)
+
+[33mcommit 3163a749319f5d9acff196e2fff4c0ee6ef351ed[m
+Author: xiongyuxiang <xiongyuxiang@sjtu.edu.cn>
+Date:   Wed Dec 25 23:25:21 2024 +0800
+
+    add operations&properties(Heap.v), update README.md, fix Makefile
+
+[33mcommit eb37bab003e8edc842ee1bfb07546b9e070c3d69[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Tue Dec 24 21:19:08 2024 +0800
+
+    12/24
+
+[33mcommit 741dadc44964904b3bcdadad934347add0633b9e[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Sun Dec 22 16:02:48 2024 +0800
+
+    supporting material updated
+
+[33mcommit dac57d1575211532d7356656a73962199e986acc[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Thu Dec 12 18:29:57 2024 +0800
+
+    first commit
+
+[33mcommit 45c7068f0c3615ecaf52c9ca37b6f8e6d363f2c0[m
+Author: icycozy <icycozyxx@gmail.com>
+Date:   Thu Dec 12 15:11:39 2024 +0800
+
+    first commit

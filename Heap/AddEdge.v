@@ -67,7 +67,50 @@ Fact add_go_left_edge_fact2: forall (v lc: Z),
                   ~ (exists x, BinaryTree.step_u s.(heap) lc x))
         (add_go_left_edge v lc)
         (fun _ s => BinaryTree.legal s.(heap)).
+Proof.
+unfold Hoare, add_go_left_edge; sets_unfold.
+intros.
+destruct H0 as [? [? [? [? [? [? ?]]]]]].
+split.
+- intros.
+  pose proof (classic(e1 = x)).
+  destruct H8.
+  + intros.
+    pose proof (classic (e2 = x)).
+    destruct H9.
+    * rewrite H8.
+      rewrite H9.
+      tauto.
+    * admit.
+  + pose proof (classic (e2 = x)).
+    destruct H9.
+    * admit.
+    * pose proof H5 e1 H8.
+      pose proof H5 e2 H9.
+      destruct H as [? [? ?]].
+      pose proof H10 x0 y1.
+      pose proof H11 x0 y2.
+      destruct H14.
+      destruct H15.
+      destruct H7.
+      rewrite H17 in H18.
+      destruct H6.
+      rewrite H16 in H19.
+      (* 现在H18 H19是最后所需要的 *)
+      destruct H14.
+      destruct H15.
+      apply H15 in H7.
+      apply H14 in H6.
+      destruct H.      
+      pose proof edge_l_unique x0 y1 y2 e1.
+    (* 现在利用 H,H18 19 6 7 可证所需结论*)
+      admit.
+  - admit.
+  - admit.
+      (* 其余类似 *)
 Admitted.
+
+
 
 Fact add_go_left_edge'_fact2:
   forall (v: Z) (a: ExistOrEmpty),
@@ -672,8 +715,6 @@ Fact add_go_left_edge_fact3_l:
     Hoare (fun s => ~ u = v /\ ~ exists x, BinaryTree.step_l s.(heap) u x)
           (add_go_left_edge v a)
           (fun _ s => ~ exists x, BinaryTree.step_l s.(heap) u x).
-Admitted.
-(* 
 Proof.
   unfold Hoare, add_go_left_edge; sets_unfold.
   intros.
@@ -698,39 +739,39 @@ Proof.
     unfold not, BinaryTree.step_l in H9.
     destruct H9.
     destruct H6.
-    destruct H8.
+    pose proof H8 u x0.
+    destruct H10.
     destruct H10.
     rewrite H11 in H9.
     assert(BinaryTree.step_aux s1.(heap) e0 u x0).
       split.
       * pose proof H2 e0.
-        destruct H12.
         destruct H6.
-        apply H12 in step_evalid.
+        apply H13 in step_evalid.
         destruct step_evalid.
         tauto.
         rewrite H6 in H7.
         tauto.
       * pose proof H0 u.
-        destruct H12.
         destruct H6.
-        apply H12 in step_src_valid.
+        destruct H13.
+        apply H6 in step_src_valid.
         tauto.
       *  pose proof H0 x0.
-        destruct H12.
         destruct H6.
-        apply H12 in step_dst_valid.
+        destruct H13.
+        apply H6 in step_dst_valid.
         tauto.
-      * destruct H6.
-        rewrite H8 in step_src.
+      * apply H8 in H6.
+        destruct H6.
         tauto.
-      * destruct H6.
-        rewrite H10 in step_dst.
+      * apply H8 in H6.
+        destruct H6.
         tauto.
       * exists x0.
         exists e0.
         tauto.
-Qed. *)
+Qed.
 
 Fact add_go_left_edge_fact3_r:
   forall (v: Z) (a: Z) (u: Z),
